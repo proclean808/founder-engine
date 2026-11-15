@@ -4,7 +4,8 @@
 //   intake <file>                                           print structured spec
 //   extract <notes.txt> [--ref YYYY-MM-DD]                  the product: action items
 //   ask "<question>"                                        RAG over venture knowledge (needs provider env)
-//   verify-evidence [state/evidence/local.jsonl]            recheck receipt hash chain
+//   verify-evidence [state/evidence/<runner>.jsonl]         recheck receipt hash chain
+//   build-project --repo <url|path> --rev <rev> --work <dir> clone, build, test, package, run 2nd instance
 import { readFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { runPipeline } from "./pipeline.js";
@@ -12,7 +13,8 @@ import { intakeDeterministic } from "./intake.js";
 import { extractActionItems, toMarkdown } from "./product/actionItems.js";
 import { KnowledgeBase } from "./knowledge.js";
 import { providerFromEnv } from "./provider.js";
-import { EvidenceLog } from "./evidence.js";
+import { EvidenceLog, detectRunner } from "./evidence.js";
+import { buildProject } from "./build-project.js";
 
 const [, , cmd, ...rest] = process.argv;
 const flag = (name: string) => {
@@ -57,13 +59,24 @@ async function main(): Promise<number> {
       return 0;
     }
     case "verify-evidence": {
-      const log = new EvidenceLog(resolve(rest[0] ?? "state/evidence/local.jsonl"));
+      const log = new EvidenceLog(resolve(rest[0] ?? `state/evidence/${detectRunner()}.jsonl`));
       const problems = log.verifyChain();
       console.log(problems.length ? problems.join("\n") : `chain intact (${log.all().length} receipts)`);
       return problems.length ? 1 : 0;
     }
+    case "build-project": {
+      const repo = flag("repo");
+      const rev = flag("rev");
+      const work = flag("work");
+      if (!repo || !rev || !work) {
+        console.error("usage: build-project --repo <url|path> --rev <commit|tag|branch> --work <empty dir>");
+        return 2;
+      }
+      const report = buildProject({ repo, rev, workDir: work, log: (m) => console.log(`[depth ${process.env.FE_BUILD_DEPTH ?? 0}] ${m}`) });
+      return report.verdict === "PASS" ? 0 : 1;
+    }
     default:
-      console.log("usage: founder-engine run|intake|extract|ask|verify-evidence");
+      console.log("usage: founder-engine run|intake|extract|ask|verify-evidence|build-project");
       return cmd ? 2 : 0;
   }
 }

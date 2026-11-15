@@ -46,3 +46,40 @@ jobs:
         with:
           name: evidence-node${{ matrix.node }}
           path: state/
+
+  # Self-reproduction: the engine takes its own repository (from GitHub, at this exact commit)
+  # through the same build-project interface used for founder repositories. Instance 1 is built
+  # from the package alone, passes the acceptance chain, then rebuilds the engine itself; the
+  # gen2 package must be byte-identical to gen1.
+  self-rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: npm ci && npm run build
+      - name: build-project on own repository
+        run: |
+          node dist/src/cli.js build-project \
+            --repo "https://github.com/${{ github.repository }}" \
+            --rev "${{ github.sha }}" \
+            --work "$RUNNER_TEMP/selfbuild/gen1"
+      - name: Assert reproduction
+        run: |
+          node -e '
+            const r = require(process.env.RUNNER_TEMP + "/selfbuild/gen1/build-report.json");
+            const c = require(process.env.RUNNER_TEMP + "/selfbuild/gen1/gen2/build-report.json");
+            console.log("gen1", r.verdict, r.resolved_commit, r.package.integrity);
+            console.log("gen2", c.verdict, c.resolved_commit, c.package.integrity);
+            if (r.verdict !== "PASS" || c.verdict !== "PASS" || !r.reproducibility?.identical) process.exit(1);
+          '
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: self-rebuild-evidence
+          path: |
+            ${{ runner.temp }}/selfbuild/**/build-report.json
+            ${{ runner.temp }}/selfbuild/**/evidence.jsonl
+            ${{ runner.temp }}/selfbuild/**/*.tgz
+            ${{ runner.temp }}/selfbuild/gen1/instance/state/

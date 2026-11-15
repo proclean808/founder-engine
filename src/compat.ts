@@ -68,11 +68,12 @@ export async function checkCompat(
   if (declaredRange !== pinnedVersion) problems.push(`package.json range ${declaredRange} is not an exact pin`);
 
   let lockfileIntegrity: string | null = null;
-  const lockPath = join(projectRoot, "package-lock.json");
-  if (existsSync(lockPath)) {
+  // npm-shrinkwrap.json is the lockfile that ships inside packaged instances.
+  const lockPath = [join(projectRoot, "npm-shrinkwrap.json"), join(projectRoot, "package-lock.json")].find(existsSync) ?? "";
+  if (lockPath) {
     const lock = JSON.parse(readFileSync(lockPath, "utf8"));
     lockfileIntegrity = lock.packages?.[`node_modules/${name}`]?.integrity ?? null;
-  } else problems.push("no package-lock.json");
+  } else problems.push("no package-lock.json or npm-shrinkwrap.json");
   const lockfileMatchesRegistry = lockfileIntegrity === registryIntegrity;
   if (!lockfileMatchesRegistry) problems.push("lockfile integrity does not match registry integrity");
 

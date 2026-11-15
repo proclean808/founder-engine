@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0.0",
+  "name": "founder-engine",
+  "engines": { "node": ">=20" },
+  "source_steps": [
+    { "id": "install", "run": ["npm", "ci"] },
+    { "id": "build-and-unit-test", "run": ["npm", "test"] },
+    { "id": "ship-lockfile", "run": ["npm", "shrinkwrap"] },
+    { "id": "package", "run": ["npm", "pack", "--json"] }
+  ],
+  "package": { "tarball_from_step": "package" },
+  "instance_steps": [
+    { "id": "install-from-shipped-lockfile", "run": ["npm", "ci", "--omit=dev", "--ignore-scripts"] },
+    { "id": "unit-tests", "run": ["node", "--test", "dist/test/unit.test.js", "dist/test/build-project.test.js"] },
+    { "id": "acceptance-pipeline", "run": ["node", "dist/src/cli.js", "run"] },
+    { "id": "evidence-chain", "run": ["node", "dist/src/cli.js", "verify-evidence"] },
+    {
+      "id": "self-rebuild",
+      "max_depth": 1,
+      "timeout_s": 1800,
+      "run": ["node", "dist/src/cli.js", "build-project", "--repo", "{{repo}}", "--rev", "{{rev}}", "--work", "{{work}}/gen2"]
+    }
+  ],
+  "reproducibility": { "compare_child_report": "{{work}}/gen2/build-report.json" }
+}

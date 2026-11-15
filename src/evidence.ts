@@ -32,6 +32,8 @@ export function detectRunner(env: NodeJS.ProcessEnv = process.env): Runner {
 }
 
 function repoCommit(): string | null {
+  // Packaged instances are not git checkouts; build-project passes the source revision explicitly.
+  if (process.env.FE_SOURCE_COMMIT) return process.env.FE_SOURCE_COMMIT;
   if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
   try {
     return execFileSync("git", ["rev-parse", "HEAD"], { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();

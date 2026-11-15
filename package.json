@@ -8,12 +8,13 @@
   "engines": {
     "node": ">=20"
   },
+  "files": ["dist/", "npm-shrinkwrap.json", "fixtures/", "founder-engine.build.json", "THIRD_PARTY_NOTICES.md", "README.md", "LICENSE"],
   "bin": {
     "founder-engine": "dist/src/cli.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "npm run build && node --test dist/test/unit.test.js",
+    "test": "npm run build && node --test dist/test/unit.test.js dist/test/build-project.test.js",
     "pipeline": "node dist/src/cli.js run --input fixtures/founder-idea.txt",
     "extract": "node dist/src/cli.js extract",
     "workspace": "node dist/src/cli.js workspace"

@@ -15,7 +15,7 @@ Example venture: a founder who can't code wants a tool that turns meeting notes 
 
 ```bash
 npm ci              # installs exactly the lockfile pins
-npm test            # 15 offline unit tests
+npm test            # 22 offline tests
 npm run pipeline    # full acceptance pipeline (needs network: npm registry + github.com)
 open state/workspace.html
 
@@ -25,6 +25,27 @@ echo "- Dana: send invoice next Friday" | npm run extract --silent
 ```
 
 Requires Node ≥ 20 and `git` on PATH. Works in Termux (`pkg install nodejs git`).
+
+## Building any repository, including this one
+
+```bash
+node dist/src/cli.js build-project --repo <git url|path> --rev <commit|tag|branch> --work <empty dir>
+```
+
+One interface covers a founder's repo and founder-engine itself. The target repo declares its own steps in `founder-engine.build.json`, versioned with its code. The engine:
+
+1. Fetches the exact revision into an empty work dir and records the resolved commit.
+2. Runs the manifest's `source_steps` with an isolated HOME, npm cache and env allowlist, so dependencies are re-resolved from the lockfile.
+3. Packages the result and records the tarball's sha512 and file list.
+4. Unpacks the tarball into a second empty dir (no git, no source) and runs `instance_steps` there.
+5. Records every command, exit code, duration and output hash as hash-chained receipts, plus `build-report.json`.
+
+**Self-reproduction.** This repo's manifest makes instance 1 run `build-project` on founder-engine again (`max_depth: 1` bounds the recursion). The rebuild is performed by the *packaged copy*, not the original checkout. Its package must be byte-identical to the parent's. CI job `self-rebuild` does this from GitHub at the pushed commit and asserts it.
+
+Isolation limits:
+- Isolation is directory, process and environment level. It is **not** a container or VM. The repo's declared commands run with the current user's permissions, so only build repositories you are authorized to execute.
+- Credentials are never passed to build steps (GitHub, AWS and npm tokens are stripped). As a result, private repositories and private registries are not supported yet.
+- A container runner (Docker/Podman, or sandboxd as a candidate) is the next isolation tier.
 
 ## Component status
 
@@ -63,6 +84,8 @@ A component cannot skip a stage. Local runs top out at **Tested**. Only CI can m
 - The product: notes → action items (CLI)
 - Static founder workspace rendered from real pipeline state
 - Clean-runner CI verification on Node 20 and 22, with evidence uploaded as an artifact
+- Generic `build-project` (clone at rev → build → test → package → second instance → acceptance), with a credential-free env allowlist
+- Self-reproduction: the packaged engine rebuilds itself, and the gen2 package is byte-identical to gen1
 
 **Not tested against a live model**
 The provider adapter has only been exercised against a local mock server. Set `FE_PROVIDER_BASE_URL`, `FE_PROVIDER_MODEL` and optionally `FE_PROVIDER_API_KEY` to use it. Keys are read from env only and are never written to disk.
@@ -73,6 +96,8 @@ The provider adapter has only been exercised against a local mock server. Set `F
 - Non-GitHub upstream license fetch; non-npm ecosystems
 - Signed receipts (Baseline rule 11: `SignedReceipt`). Receipts are hash-chained, not signed.
 - Interactive web workspace, third-party integrations (Drive, Gmail, Supabase, Stripe)
+- Container/VM isolation for build-project; private repos and registries
+- Autonomous successor *design*. The engine can rebuild and verify itself. Proposing and promoting improvements needs separate evaluation and a human authorization gate, and is not built.
 - Fine-tuning or other post-training. The knowledge base is retrieval only and does not change model weights.
 - Avatar studio and the investor experience
 
@@ -100,8 +125,10 @@ src/
   product/          the founder's tool
   workspace.ts      static workspace page
   pipeline.ts       orchestrates the acceptance chain
+  build-project.ts  generic clone→build→package→instance builder (self-rebuild)
   cli.ts
-test/unit.test.ts
+test/unit.test.ts, test/build-project.test.ts
+founder-engine.build.json   this repo's own build manifest
 fixtures/           example founder idea + meeting notes
 ```
 
