@@ -53,7 +53,7 @@ function detectConstraints(text: string): string[] {
   if (/\b(no|without) (a )?(server|backend)\b/i.test(text)) out.push("no server/backend");
   if (/\b(offline|local[- ]first)\b/i.test(text)) out.push("local-first / offline");
   if (/\bfree|bootstrapp|no budget|cheap\b/i.test(text)) out.push("minimal budget");
-  if (/\bnon[- ]technical|can'?t code|no coding\b/i.test(text)) out.push("founder is non-technical");
+  if (/\bnon[- ]technical|can'?t code|cannot code|no coding\b/i.test(text)) out.push("founder is non-technical");
   return out;
 }
 

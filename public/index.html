@@ -114,7 +114,9 @@ function render(d) {
   <section><details><summary>Evidence receipts (${d.receipts.length}, hash-chained)</summary>
     <table class="small"><tr><th>#</th><th>Kind</th><th>Subject</th><th></th><th>Hash</th></tr>${d.receipts.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.kind)}</td><td>${esc(r.subject)}</td><td>${pill(r.result)}</td><td><code>${esc(r.receipt_hash.slice(0, 16))}</code></td></tr>`).join("")}</table>
     <div class="row"><button class="ghost" id="dl">Download run JSON</button></div>
-  </details></section>`;
+  </details></section>
+  <section><h2>Next: pitch it</h2><p class="small mute">Turn this run into an interactive pitch with three synthetic presenters (founder twin, co-CTO, co-CFO) who answer only from this evidence.</p><div class="row"><button id="toPitch">Open Pitch Studio with this run</button></div></section>`;
+  $("toPitch").onclick = () => { try { sessionStorage.setItem("fe-run", JSON.stringify(d)); } catch {} location.href = "/pitch.html"; };
   $("dl").onclick = () => {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([JSON.stringify(d, null, 2)], { type: "application/json" }));

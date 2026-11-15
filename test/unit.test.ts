@@ -221,3 +221,71 @@ test("repo vetting: license classification, declarations, release-tag pinning", 
   assert.deepEqual(latestReleaseTag(refs), { tag: "v1.10.0", commit: c });
   assert.equal(normalizeGithubRepo("git+https://github.com/Owner/Repo.git"), "https://github.com/Owner/Repo");
 });
+
+// ---------- Milestone 2: pitch studio ----------
+const sampleRun = () => JSON.parse(readFileSync("fixtures/sample-run.json", "utf8"));
+const fixedProvider = (reply: string) => ({ id: "test", chat: async () => reply });
+
+test("pitch: every script line cites facts, and no line contains a number absent from the evidence", async () => {
+  const { buildScript, ungroundedNumbers } = await import("../src/pitch.js");
+  const pack = { run: sampleRun(), founder: { ask: "Raising $150k pre-seed", assumptions: ["Price: $12 per team per month"] } };
+  const { facts, script } = buildScript(pack);
+  assert.ok(script.length >= 8);
+  for (const l of script) {
+    assert.ok(l.cites.length > 0, `uncited line: ${l.text}`);
+    const cited = facts.filter((f) => l.cites.includes(f.id));
+    assert.deepEqual(ungroundedNumbers(l.text, facts), [], `ungrounded number in: ${l.text}`);
+    assert.ok(cited.length === l.cites.length);
+  }
+  assert.ok(script.some((l) => l.persona === "cfo" && /not a measured result/.test(l.text)));
+});
+
+test("pitch: with no founder assumptions the CFO says so instead of presenting figures", async () => {
+  const { buildScript } = await import("../src/pitch.js");
+  const cfo = buildScript({ run: sampleRun(), founder: {} }).script.filter((l) => l.persona === "cfo");
+  assert.ok(cfo.some((l) => /No financial assumptions have been provided/.test(l.text)));
+});
+
+test("pitch: questions route to the right presenter and uncovered questions escalate", async () => {
+  const { answerQuestion, routeQuestion } = await import("../src/pitch.js");
+  assert.equal(routeQuestion("What's your burn rate?"), "cfo");
+  assert.equal(routeQuestion("Which licences do the components use?"), "cto");
+  assert.equal(routeQuestion("Why you, why now?"), "founder");
+  const pack = { run: sampleRun(), founder: { assumptions: ["Price: $12 per team per month"] } };
+  const price = await answerQuestion(pack, "What is your pricing?", null);
+  assert.equal(price.persona, "cfo");
+  assert.match(price.answer, /\$12/);
+  const tam = await answerQuestion(pack, "What is the total addressable market?", null);
+  assert.equal(tam.escalate, true);
+  const lic = await answerQuestion(pack, "What open source licenses are you using?", null);
+  assert.match(lic.answer, /chrono-node 2\.10\.3/);
+});
+
+test("pitch: an LLM answer with an invented number is rejected and replaced by evidence", async () => {
+  const { answerQuestion } = await import("../src/pitch.js");
+  const pack = { run: sampleRun(), founder: { assumptions: ["Price: $12 per team per month"] } };
+  const a = await answerQuestion(pack, "What is your pricing?", fixedProvider("We charge $12 per team and already have 5,000 customers [F1]."));
+  assert.equal(a.mode, "llm-rejected-fallback");
+  assert.doesNotMatch(a.answer, /5,000|5000/);
+  const ok = await answerQuestion(pack, "What is your pricing?", fixedProvider("Our working assumption is $12 per team per month [F" + "X]."));
+  assert.equal(ok.mode, "llm-rejected-fallback"); // invalid citation id
+});
+
+test("pitch: a grounded LLM answer with valid citations is accepted; ESCALATE escalates", async () => {
+  const { answerQuestion, buildFacts } = await import("../src/pitch.js");
+  const pack = { run: sampleRun(), founder: { assumptions: ["Price: $12 per team per month"] } };
+  const priceFact = buildFacts(pack).find((f) => f.kind === "assumption")!;
+  const a = await answerQuestion(pack, "What is your pricing?", fixedProvider(`The founder's assumption is $12 per team per month [${priceFact.id}].`));
+  assert.equal(a.mode, "llm-grounded");
+  assert.deepEqual(a.cites, [priceFact.id]);
+  const e = await answerQuestion(pack, "What is your pricing?", fixedProvider("ESCALATE"));
+  assert.equal(e.escalate, true);
+});
+
+test("pitch: untrusted packs are validated", async () => {
+  const { normalizePack } = await import("../src/pitch.js");
+  assert.throws(() => normalizePack({ run: { spec: null } }), /curate result/);
+  const p = normalizePack({ run: sampleRun(), founder: { assumptions: "a\nb\n\n", founder_name: "x".repeat(500) } });
+  assert.deepEqual(p.founder.assumptions, ["a", "b"]);
+  assert.equal(p.founder.founder_name!.length, 80);
+});

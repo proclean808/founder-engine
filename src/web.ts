@@ -8,6 +8,8 @@ import { runPipeline } from "./pipeline.js";
 import { extractActionItems } from "./product/actionItems.js";
 import { EvidenceLog, detectRunner } from "./evidence.js";
 import { vetRepo } from "./repo-vetting.js";
+import { normalizePack, buildScript, answerQuestion, PERSONAS, type Persona } from "./pitch.js";
+import { providerFromEnv } from "./provider.js";
 
 export const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
@@ -97,4 +99,29 @@ export async function handleVetRepos(body: unknown) {
   }));
   for (const v of results) log.record("repo-vetting", v.repo, v.status === "Proposed" ? "PASS" : "FAIL", {}, v);
   return { runner: detectRunner(), results, receipts: log.all(), chain_intact: log.verifyChain().length === 0 };
+}
+
+function packFrom(b: Record<string, unknown>) {
+  if (JSON.stringify(b.pack ?? null).length > 400_000) throw new HttpError(413, "pack too large");
+  try {
+    return normalizePack(b.pack);
+  } catch (e) {
+    throw new HttpError(400, (e as Error).message);
+  }
+}
+
+export function handlePitch(body: unknown) {
+  const b = (body ?? {}) as Record<string, unknown>;
+  const pack = packFrom(b);
+  const { facts, script, title } = buildScript(pack);
+  return { title, personas: PERSONAS, facts, script, founder: pack.founder, llm: providerFromEnv() ? "configured" : "not configured (evidence-retrieval answers)" };
+}
+
+export async function handleAsk(body: unknown) {
+  const b = (body ?? {}) as Record<string, unknown>;
+  const pack = packFrom(b);
+  const question = str(b.question, "question", 3, 500)!;
+  const persona = b.persona === undefined || b.persona === null || b.persona === "" ? undefined : String(b.persona);
+  if (persona && !(persona in PERSONAS)) throw new HttpError(400, "persona must be founder, cto or cfo");
+  return answerQuestion(pack, question, providerFromEnv(), persona as Persona | undefined);
 }

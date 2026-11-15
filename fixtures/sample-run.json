@@ -1,0 +1,787 @@
+{
+  "run_id": "PWgU1E",
+  "runner": "service",
+  "engine_commit": null,
+  "status": "Tested",
+  "status_reason": "7/7 acceptance cases passed on service runner; Verified requires a clean CI run",
+  "selected": "chrono-node",
+  "spec": {
+    "schema_version": "1.0.0",
+    "venture_name": "Small Agency Meetings",
+    "founder_statement": "I run a small agency and our meetings end with notes nobody turns into tasks. I want a tool for small team leads that pulls out action items, owners and due dates like next Friday. I cannot code and have no budget.",
+    "problem": "I run a small agency and our meetings end with notes nobody turns into tasks.",
+    "target_user": "small team leads",
+    "stage": "idea",
+    "capabilities": [
+      {
+        "id": "natural-language-date-parsing",
+        "description": "Turn phrases like 'next Friday' or 'by Nov 20' into concrete dates",
+        "searchQuery": "natural language date parser"
+      }
+    ],
+    "constraints": [
+      "minimal budget"
+    ],
+    "immediate_objective": "Working tool demonstrating: Turn phrases like 'next Friday' or 'by Nov 20' into concrete dates",
+    "open_questions": [
+      "What already exists (code, prototype, data) versus what must be built?",
+      "Which AI model / development environment do you prefer?"
+    ],
+    "extraction_method": "deterministic-rules"
+  },
+  "registry": [
+    {
+      "name": "@calchemy/date-core",
+      "version": "0.3.0",
+      "capability": "natural-language-date-parsing",
+      "repository": "https://github.com/ikartik90/calchemy",
+      "upstreamAuthor": "Kartik Iyer",
+      "license": "MIT",
+      "pinnedCommit": null,
+      "integrity": "sha512-7uiWa1CrmPD9TWFYwS/sJVm3uYXeqd74Lwijszu2IUmB5xpctmaD8iIdJ8tmm6E5auDAaeqbMXn6l38l+pMd5w==",
+      "status": "Blocked",
+      "statusReason": "registry records no source commit (gitHead); no repository/commit: cannot compare against upstream",
+      "evidence": [
+        "2163e412a1305ae63270d820c51c4dc2763f03de4d494e5cda593376d822f171"
+      ],
+      "updated_at": "2026-11-15T23:56:37.001Z"
+    },
+    {
+      "name": "chrono-node",
+      "version": "2.10.3",
+      "capability": "natural-language-date-parsing",
+      "repository": "https://github.com/wanasit/chrono",
+      "upstreamAuthor": "Wanasit Tanakitrungruang",
+      "license": "MIT",
+      "pinnedCommit": "d4fe7e39015c818b271d74789fb96f74777421d0",
+      "integrity": "sha512-MOfrzXgSMZTH4SZ5gyRKQCVwiCrCKY+uYkSJiWoRLXS88DA6WGJm8UjgS+VVEuUQeew/UUXaxrO+SeDn/WCisg==",
+      "status": "Tested",
+      "statusReason": "7/7 acceptance cases passed on service runner; Verified requires a clean CI run",
+      "evidence": [
+        "67a8c293030cfa08f49525dd6481fce0ba2d16ffd26c5ae4fe43194d7af34a93",
+        "f7677717ae5682a736c4b7e8b8bbb9b06b212502317c5e284171b5e58e2f0fd5",
+        "013692e79664f21e326e88f699aadae76dac63ad2e9dbbf65f139320ebc636a6",
+        "40543da8844e09608c07531724a908b451c2e3665eba9933e1f22fa29764ca18"
+      ],
+      "updated_at": "2026-11-15T23:56:37.772Z"
+    },
+    {
+      "name": "chrono-node-zh",
+      "version": "1.0.1",
+      "capability": "natural-language-date-parsing",
+      "repository": "https://github.com/weather-bot/chrono",
+      "upstreamAuthor": "Wanasit Tanakitrungruang",
+      "license": "MIT",
+      "pinnedCommit": "a086747fc2c5bfdf12541092b742843af99e3f9d",
+      "integrity": "sha512-aUqtnmkPH/pQNX8GNDTS0/KcGlHNHVz6lQniabVTcS6Oylx2O384FIWTUsIStq0yNJAylTTBlMyRj0GYAf3cew==",
+      "status": "Proposed",
+      "statusReason": "vetted (commit present upstream; MIT text matches upstream); no integration adapter yet",
+      "evidence": [
+        "271c234ae54495cba004ea45522cfc28f1c1c9758644708d2f0c9ce9392d553d"
+      ],
+      "updated_at": "2026-11-15T23:56:36.996Z"
+    },
+    {
+      "name": "trev-chrono-node",
+      "version": "1.0.6",
+      "capability": "natural-language-date-parsing",
+      "repository": "https://github.com/berryboy/chrono",
+      "upstreamAuthor": "Wanasit Tanakitrungruang",
+      "license": "MIT",
+      "pinnedCommit": "980051aa238c9b4993e3210afeb71e40f85354eb",
+      "integrity": "sha512-xTrvyKE8Qpgv/I6llP23cwmoQk+g49lDwTRhiTolXaCRbOyJdIG4/7Uy8LAH1Yxsy8mCguf/XJPksuDACSm8vg==",
+      "status": "Proposed",
+      "statusReason": "vetted (commit present upstream; MIT text matches upstream); no integration adapter yet",
+      "evidence": [
+        "a007bdd1f2ea63fdacf38aacd36ee3dbd5d178a7f1538b9e1036ba05cdd5a716"
+      ],
+      "updated_at": "2026-11-15T23:56:37.013Z"
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "venture-spec",
+      "title": "Venture spec: Small Agency Meetings",
+      "body": "I run a small agency and our meetings end with notes nobody turns into tasks.\nStage: idea\nTarget user: small team leads\nCapabilities: natural-language-date-parsing\nConstraints: minimal budget\nOpen questions: What already exists (code, prototype, data) versus what must be built? Which AI model / development environment do you prefer?",
+      "source": "state/venture-spec.json",
+      "evidence": [
+        "1b6c280feef0cdf36405e61205407f6c907dd5f769eb652dc601cbd7d8020596"
+      ],
+      "version": 1,
+      "updated_at": "2026-11-15T23:56:35.869Z"
+    },
+    {
+      "id": "component:chrono-node",
+      "title": "Component chrono-node@2.10.3 (Tested)",
+      "body": "Capability: Turn phrases like 'next Friday' or 'by Nov 20' into concrete dates. License MIT (Copyright (c) 2014, Wanasit Tanakitrungruang). Upstream https://github.com/wanasit/chrono at commit d4fe7e39015c818b271d74789fb96f74777421d0. Acceptance: relative-weekday expected 2026-11-20 got 2026-11-20 PASS; absolute-month-day expected 2026-11-20 got 2026-11-20 PASS; tomorrow expected 2026-11-16 got 2026-11-16 PASS; in-n-days expected 2026-11-18 got 2026-11-18 PASS; iso-date expected 2026-12-01 got 2026-12-01 PASS; month-day-time expected 2026-12-03 got 2026-12-03 PASS; no-date expected null got null PASS. Status reason: 7/7 acceptance cases passed on service runner; Verified requires a clean CI run",
+      "source": "state/evidence/service.jsonl#40543da8844e09608c07531724a908b451c2e3665eba9933e1f22fa29764ca18",
+      "evidence": [
+        "67a8c293030cfa08f49525dd6481fce0ba2d16ffd26c5ae4fe43194d7af34a93",
+        "f7677717ae5682a736c4b7e8b8bbb9b06b212502317c5e284171b5e58e2f0fd5",
+        "013692e79664f21e326e88f699aadae76dac63ad2e9dbbf65f139320ebc636a6",
+        "40543da8844e09608c07531724a908b451c2e3665eba9933e1f22fa29764ca18"
+      ],
+      "version": 1,
+      "updated_at": "2026-11-15T23:56:37.773Z"
+    },
+    {
+      "id": "artifact:action-items",
+      "title": "Generated artifact: action items from sample meeting notes",
+      "body": "| Action | Owner | Due |\n|---|---|---|\n| follow up with the printer next Friday | Dana | 2026-11-20 |\n| Send the revised deck to Marco by November 20 | — | 2026-11-20 |\n| Book the venue tomorrow | — | 2026-11-16 |\n| draft the Q1 budget in 3 days | Sam | 2026-11-18 |\n| Renew the hosting contract on 2026-12-01 | — | 2026-12-01 |\n| Investor call Dec 3 at 3pm, prepare the one-pager | — | 2026-12-03 |",
+      "source": "state/artifacts/action-items.md",
+      "evidence": [
+        "092f8f81e40c3998997a9e30f274ce6c8410596789300a6d579b8b04b56cf5e1"
+      ],
+      "version": 1,
+      "updated_at": "2026-11-15T23:56:37.800Z"
+    }
+  ],
+  "artifact": [
+    {
+      "text": "follow up with the printer next Friday",
+      "owner": "Dana",
+      "due": "2026-11-20",
+      "dueSource": "next Friday"
+    },
+    {
+      "text": "Send the revised deck to Marco by November 20",
+      "owner": null,
+      "due": "2026-11-20",
+      "dueSource": "November 20"
+    },
+    {
+      "text": "Book the venue tomorrow",
+      "owner": null,
+      "due": "2026-11-16",
+      "dueSource": "tomorrow"
+    },
+    {
+      "text": "draft the Q1 budget in 3 days",
+      "owner": "Sam",
+      "due": "2026-11-18",
+      "dueSource": "in 3 days"
+    },
+    {
+      "text": "Renew the hosting contract on 2026-12-01",
+      "owner": null,
+      "due": "2026-12-01",
+      "dueSource": "2026-12-01"
+    },
+    {
+      "text": "Investor call Dec 3 at 3pm, prepare the one-pager",
+      "owner": null,
+      "due": "2026-12-03",
+      "dueSource": "Dec 3 at 3pm"
+    }
+  ],
+  "receipts": [
+    {
+      "schema_version": "1.0.0",
+      "receipt_id": "66846a0e-0fc7-46e9-b525-5e4fe29962f9",
+      "kind": "intake",
+      "subject": "Small Agency Meetings",
+      "result": "INFO",
+      "created_at": "2026-11-15T23:56:35.860Z",
+      "environment": {
+        "runner": "service",
+        "node": "22.23.4",
+        "platform": "linux-x64",
+        "repo_commit": "9fed7654755162f5d36ca91a0b0258e2fecf245a",
+        "ci_run_url": null
+      },
+      "inputs": {
+        "founder_input": "I run a small agency and our meetings end with notes nobody turns into tasks. I want a tool for small team leads that pulls out action items, owners and due dates like next Friday. I cannot code and have no budget."
+      },
+      "outputs": {
+        "schema_version": "1.0.0",
+        "venture_name": "Small Agency Meetings",
+        "founder_statement": "I run a small agency and our meetings end with notes nobody turns into tasks. I want a tool for small team leads that pulls out action items, owners and due dates like next Friday. I cannot code and have no budget.",
+        "problem": "I run a small agency and our meetings end with notes nobody turns into tasks.",
+        "target_user": "small team leads",
+        "stage": "idea",
+        "capabilities": [
+          {
+            "id": "natural-language-date-parsing",
+            "description": "Turn phrases like 'next Friday' or 'by Nov 20' into concrete dates",
+            "searchQuery": "natural language date parser"
+          }
+        ],
+        "constraints": [
+          "minimal budget"
+        ],
+        "immediate_objective": "Working tool demonstrating: Turn phrases like 'next Friday' or 'by Nov 20' into concrete dates",
+        "open_questions": [
+          "What already exists (code, prototype, data) versus what must be built?",
+          "Which AI model / development environment do you prefer?"
+        ],
+        "extraction_method": "deterministic-rules"
+      },
+      "prior_receipt_hash": "genesis",
+      "receipt_hash": "1b6c280feef0cdf36405e61205407f6c907dd5f769eb652dc601cbd7d8020596"
+    },
+    {
+      "schema_version": "1.0.0",
+      "receipt_id": "ab230778-98f4-4241-99ef-6d3cecca2fbe",
+      "kind": "discovery",
+      "subject": "natural-language-date-parsing",
+      "result": "INFO",
+      "created_at": "2026-11-15T23:56:36.109Z",
+      "environment": {
+        "runner": "service",
+        "node": "22.23.4",
+        "platform": "linux-x64",
+        "repo_commit": "9fed7654755162f5d36ca91a0b0258e2fecf245a",
+        "ci_run_url": null
+      },
+      "inputs": {
+        "query": "natural language date parser"
+      },
+      "outputs": [
+        {
+          "name": "chrono-node",
+          "version": "2.10.3",
+          "declaredLicense": "MIT",
+          "repositoryUrl": "https://github.com/wanasit/chrono",
+          "description": "A natural language date parser in Javascript",
+          "score": 1041.2776,
+          "scoped": false,
+          "rank": 1,
+          "notes": [],
+          "eligible": true
+        },
+        {
+          "name": "@wengjames/chrono-node",
+          "version": "0.0.11",
+          "declaredLicense": "MIT",
+          "repositoryUrl": "https://github.com/obs-gh-jamesweng/chrono",
+          "description": "A natural language date parser in Javascript",
+          "score": 633.44885,
+          "scoped": true,
+          "rank": 2,
+          "notes": [
+            "scoped copy of chrono-node from a different repository (likely fork); upstream package preferred"
+          ],
+          "eligible": false
+        },
+        {
+          "name": "chrono-node-zh",
+          "version": "1.0.1",
+          "declaredLicense": "MIT",
+          "repositoryUrl": "https://github.com/weather-bot/chrono",
+          "description": "A natural language date parser in Javascript(Fork for ZH)",
+          "score": 292.08624,
+          "scoped": false,
+          "rank": 3,
+          "notes": [],
+          "eligible": true
+        },
+        {
+          "name": "@zhouzi/chrono-node",
+          "version": "2.7.1",
+          "declaredLicense": "MIT",
+          "repositoryUrl": "https://github.com/wanasit/chrono",
+          "description": "A natural language date parser in Javascript",
+          "score": 290.18094,
+          "scoped": true,
+          "rank": 4,
+          "notes": [
+            "republish of https://github.com/wanasit/chrono; upstream package preferred"
+          ],
+          "eligible": false
+        },
+        {
+          "name": "@asksel/chrono-node",
+          "version": "2.7.10",
+          "declaredLicense": "MIT",
+          "repositoryUrl": "https://github.com/wanasit/chrono",
+          "description": "A natural language date parser in Javascript",
+          "score": 267.8493,
+          "scoped": true,
+          "rank": 5,
+          "notes": [
+            "republish of https://github.com/wanasit/chrono; upstream package preferred"
+          ],
+          "eligible": false
+        },
+        {
+          "name": "@calchemy/date-core",
+          "version": "0.3.0",
+          "declaredLicense": "MIT",
+          "repositoryUrl": "https://github.com/ikartik90/calchemy",
+          "description": "Natural language date parser with Temporal values.",
+          "score": 262.96457,
+          "scoped": true,
+          "rank": 6,
+          "notes": [],
+          "eligible": true
+        },
+        {
+          "name": "chrono-node-v2-zh-preview",
+          "version": "2.3.4",
+          "declaredLicense": "MIT",
+          "repositoryUrl": "https://github.com/wanasit/chrono",
+          "description": "A natural language date parser in Javascript",
+          "score": 246.62334,
+          "scoped": false,
+          "rank": 7,
+          "notes": [
+            "republish of https://github.com/wanasit/chrono; upstream package preferred"
+          ],
+          "eligible": false
+        },
+        {
+          "name": "@depup/chrono-node",
+          "version": "2.10.3-depup.0",
+          "declaredLicense": "MIT",
+          "repositoryUrl": "https://github.com/wanasit/chrono",
+          "description": "A natural language date parser in Javascript (with updated dependencies)",
+          "score": 238.08975,
+          "scoped": true,
+          "rank": 8,
+          "notes": [
+            "republish of https://github.com/wanasit/chrono; upstream package preferred"
+          ],
+          "eligible": false
+        },
+        {
+          "name": "trev-chrono-node",
+          "version": "1.0.6",
+          "declaredLicense": "MIT",
+          "repositoryUrl": "https://github.com/berryboy/chrono",
+          "description": "A natural language date parser in Javascript",
+          "score": 213.98393,
+          "scoped": false,
+          "rank": 9,
+          "notes": [],
+          "eligible": true
+        },
+        {
+          "name": "@seikho/chrono-node",
+          "version": "1.2.6",
+          "declaredLicense": "MIT",
+          "repositoryUrl": "https://github.com/berryboy/chrono",
+          "description": "A natural language date parser in Javascript",
+          "score": 190.8661,
+          "scoped": true,
+          "rank": 10,
+          "notes": [
+            "republish of https://github.com/berryboy/chrono; upstream package preferred"
+          ],
+          "eligible": false
+        }
+      ],
+      "prior_receipt_hash": "1b6c280feef0cdf36405e61205407f6c907dd5f769eb652dc601cbd7d8020596",
+      "receipt_hash": "1e2a01009875a1448cf09672ed4ed49ed4fd89aa2d6d165bbfdd9eecce23a24d"
+    },
+    {
+      "schema_version": "1.0.0",
+      "receipt_id": "6efc7032-08aa-4277-a3a2-9b7b65a03052",
+      "kind": "vetting",
+      "subject": "chrono-node-zh@1.0.1",
+      "result": "PASS",
+      "created_at": "2026-11-15T23:56:36.991Z",
+      "environment": {
+        "runner": "service",
+        "node": "22.23.4",
+        "platform": "linux-x64",
+        "repo_commit": "9fed7654755162f5d36ca91a0b0258e2fecf245a",
+        "ci_run_url": null
+      },
+      "inputs": {
+        "candidate": "chrono-node-zh",
+        "version": "1.0.1",
+        "capability": "natural-language-date-parsing"
+      },
+      "outputs": {
+        "provenance": {
+          "name": "chrono-node-zh",
+          "version": "1.0.1",
+          "tarballUrl": "https://registry.npmjs.org/chrono-node-zh/-/chrono-node-zh-1.0.1.tgz",
+          "integrity": "sha512-aUqtnmkPH/pQNX8GNDTS0/KcGlHNHVz6lQniabVTcS6Oylx2O384FIWTUsIStq0yNJAylTTBlMyRj0GYAf3cew==",
+          "tarballSha512Matches": true,
+          "gitHead": "a086747fc2c5bfdf12541092b742843af99e3f9d",
+          "repository": "https://github.com/weather-bot/chrono",
+          "tagRef": null,
+          "tagCommit": null,
+          "gitHeadMatchesTag": false
+        },
+        "provenance_basis": "commit present upstream",
+        "license": {
+          "spdx": "MIT",
+          "declaredInPackageJson": "MIT",
+          "tarballLicenseFile": "package/LICENSE.txt",
+          "tarballLicenseSha256": "15c8a1f9e382b2dbb14c7285a4eaca540df6f19c73a702aabb6066860cec64d2",
+          "upstreamLicenseUrl": "https://raw.githubusercontent.com/weather-bot/chrono/a086747fc2c5bfdf12541092b742843af99e3f9d/LICENSE.txt",
+          "upstreamLicenseSha256": "15c8a1f9e382b2dbb14c7285a4eaca540df6f19c73a702aabb6066860cec64d2",
+          "tarballMatchesUpstream": true,
+          "mitClausesPresent": true,
+          "copyrightLine": "Copyright (c) 2014, Wanasit Tanakitrungruang",
+          "compatibleWithProject": true,
+          "problems": []
+        },
+        "problems": []
+      },
+      "prior_receipt_hash": "1e2a01009875a1448cf09672ed4ed49ed4fd89aa2d6d165bbfdd9eecce23a24d",
+      "receipt_hash": "271c234ae54495cba004ea45522cfc28f1c1c9758644708d2f0c9ce9392d553d"
+    },
+    {
+      "schema_version": "1.0.0",
+      "receipt_id": "8e31d249-955f-419c-bf89-91fdd53dcddc",
+      "kind": "vetting",
+      "subject": "@calchemy/date-core@0.3.0",
+      "result": "FAIL",
+      "created_at": "2026-11-15T23:56:36.997Z",
+      "environment": {
+        "runner": "service",
+        "node": "22.23.4",
+        "platform": "linux-x64",
+        "repo_commit": "9fed7654755162f5d36ca91a0b0258e2fecf245a",
+        "ci_run_url": null
+      },
+      "inputs": {
+        "candidate": "@calchemy/date-core",
+        "version": "0.3.0",
+        "capability": "natural-language-date-parsing"
+      },
+      "outputs": {
+        "provenance": {
+          "name": "@calchemy/date-core",
+          "version": "0.3.0",
+          "tarballUrl": "https://registry.npmjs.org/@calchemy/date-core/-/date-core-0.3.0.tgz",
+          "integrity": "sha512-7uiWa1CrmPD9TWFYwS/sJVm3uYXeqd74Lwijszu2IUmB5xpctmaD8iIdJ8tmm6E5auDAaeqbMXn6l38l+pMd5w==",
+          "tarballSha512Matches": true,
+          "gitHead": null,
+          "repository": "https://github.com/ikartik90/calchemy",
+          "tagRef": null,
+          "tagCommit": null,
+          "gitHeadMatchesTag": false
+        },
+        "provenance_basis": null,
+        "license": {
+          "spdx": "MIT",
+          "declaredInPackageJson": "MIT",
+          "tarballLicenseFile": "package/LICENSE",
+          "tarballLicenseSha256": "9ec523198600890173e8d3d4b7dda26531d6c7c185dcd0d5aec3dbdc1535e904",
+          "upstreamLicenseUrl": null,
+          "upstreamLicenseSha256": null,
+          "tarballMatchesUpstream": false,
+          "mitClausesPresent": true,
+          "copyrightLine": "Copyright (c) 2026 Kartik Iyer",
+          "compatibleWithProject": false,
+          "problems": [
+            "no repository/commit: cannot compare against upstream"
+          ]
+        },
+        "problems": [
+          "registry records no source commit (gitHead)",
+          "no repository/commit: cannot compare against upstream"
+        ]
+      },
+      "prior_receipt_hash": "271c234ae54495cba004ea45522cfc28f1c1c9758644708d2f0c9ce9392d553d",
+      "receipt_hash": "2163e412a1305ae63270d820c51c4dc2763f03de4d494e5cda593376d822f171"
+    },
+    {
+      "schema_version": "1.0.0",
+      "receipt_id": "284d0786-684f-4950-bcde-311f8c8fe43f",
+      "kind": "vetting",
+      "subject": "trev-chrono-node@1.0.6",
+      "result": "PASS",
+      "created_at": "2026-11-15T23:56:37.009Z",
+      "environment": {
+        "runner": "service",
+        "node": "22.23.4",
+        "platform": "linux-x64",
+        "repo_commit": "9fed7654755162f5d36ca91a0b0258e2fecf245a",
+        "ci_run_url": null
+      },
+      "inputs": {
+        "candidate": "trev-chrono-node",
+        "version": "1.0.6",
+        "capability": "natural-language-date-parsing"
+      },
+      "outputs": {
+        "provenance": {
+          "name": "trev-chrono-node",
+          "version": "1.0.6",
+          "tarballUrl": "https://registry.npmjs.org/trev-chrono-node/-/trev-chrono-node-1.0.6.tgz",
+          "integrity": "sha512-xTrvyKE8Qpgv/I6llP23cwmoQk+g49lDwTRhiTolXaCRbOyJdIG4/7Uy8LAH1Yxsy8mCguf/XJPksuDACSm8vg==",
+          "tarballSha512Matches": true,
+          "gitHead": "980051aa238c9b4993e3210afeb71e40f85354eb",
+          "repository": "https://github.com/berryboy/chrono",
+          "tagRef": null,
+          "tagCommit": null,
+          "gitHeadMatchesTag": false
+        },
+        "provenance_basis": "commit present upstream",
+        "license": {
+          "spdx": "MIT",
+          "declaredInPackageJson": "MIT",
+          "tarballLicenseFile": "package/LICENSE.txt",
+          "tarballLicenseSha256": "15c8a1f9e382b2dbb14c7285a4eaca540df6f19c73a702aabb6066860cec64d2",
+          "upstreamLicenseUrl": "https://raw.githubusercontent.com/berryboy/chrono/980051aa238c9b4993e3210afeb71e40f85354eb/LICENSE.txt",
+          "upstreamLicenseSha256": "15c8a1f9e382b2dbb14c7285a4eaca540df6f19c73a702aabb6066860cec64d2",
+          "tarballMatchesUpstream": true,
+          "mitClausesPresent": true,
+          "copyrightLine": "Copyright (c) 2014, Wanasit Tanakitrungruang",
+          "compatibleWithProject": true,
+          "problems": []
+        },
+        "problems": []
+      },
+      "prior_receipt_hash": "2163e412a1305ae63270d820c51c4dc2763f03de4d494e5cda593376d822f171",
+      "receipt_hash": "a007bdd1f2ea63fdacf38aacd36ee3dbd5d178a7f1538b9e1036ba05cdd5a716"
+    },
+    {
+      "schema_version": "1.0.0",
+      "receipt_id": "7421ce67-e752-4783-9f94-414e30a17949",
+      "kind": "provenance",
+      "subject": "chrono-node@2.10.3",
+      "result": "PASS",
+      "created_at": "2026-11-15T23:56:37.603Z",
+      "environment": {
+        "runner": "service",
+        "node": "22.23.4",
+        "platform": "linux-x64",
+        "repo_commit": "9fed7654755162f5d36ca91a0b0258e2fecf245a",
+        "ci_run_url": null
+      },
+      "inputs": {
+        "pin": "2.10.3"
+      },
+      "outputs": {
+        "name": "chrono-node",
+        "version": "2.10.3",
+        "tarballUrl": "https://registry.npmjs.org/chrono-node/-/chrono-node-2.10.3.tgz",
+        "integrity": "sha512-MOfrzXgSMZTH4SZ5gyRKQCVwiCrCKY+uYkSJiWoRLXS88DA6WGJm8UjgS+VVEuUQeew/UUXaxrO+SeDn/WCisg==",
+        "tarballSha512Matches": true,
+        "gitHead": "d4fe7e39015c818b271d74789fb96f74777421d0",
+        "repository": "https://github.com/wanasit/chrono",
+        "tagRef": "refs/tags/v2.10.3",
+        "tagCommit": "d4fe7e39015c818b271d74789fb96f74777421d0",
+        "gitHeadMatchesTag": true,
+        "problems": []
+      },
+      "prior_receipt_hash": "a007bdd1f2ea63fdacf38aacd36ee3dbd5d178a7f1538b9e1036ba05cdd5a716",
+      "receipt_hash": "67a8c293030cfa08f49525dd6481fce0ba2d16ffd26c5ae4fe43194d7af34a93"
+    },
+    {
+      "schema_version": "1.0.0",
+      "receipt_id": "dc6ad0f3-eed5-4b2c-83a4-c2bda1ea3684",
+      "kind": "license",
+      "subject": "chrono-node@2.10.3",
+      "result": "PASS",
+      "created_at": "2026-11-15T23:56:37.608Z",
+      "environment": {
+        "runner": "service",
+        "node": "22.23.4",
+        "platform": "linux-x64",
+        "repo_commit": "9fed7654755162f5d36ca91a0b0258e2fecf245a",
+        "ci_run_url": null
+      },
+      "inputs": {
+        "repository": "https://github.com/wanasit/chrono",
+        "commit": "d4fe7e39015c818b271d74789fb96f74777421d0"
+      },
+      "outputs": {
+        "spdx": "MIT",
+        "declaredInPackageJson": "MIT",
+        "tarballLicenseFile": "package/LICENSE.txt",
+        "tarballLicenseSha256": "15c8a1f9e382b2dbb14c7285a4eaca540df6f19c73a702aabb6066860cec64d2",
+        "upstreamLicenseUrl": "https://raw.githubusercontent.com/wanasit/chrono/d4fe7e39015c818b271d74789fb96f74777421d0/LICENSE.txt",
+        "upstreamLicenseSha256": "15c8a1f9e382b2dbb14c7285a4eaca540df6f19c73a702aabb6066860cec64d2",
+        "tarballMatchesUpstream": true,
+        "mitClausesPresent": true,
+        "copyrightLine": "Copyright (c) 2014, Wanasit Tanakitrungruang",
+        "compatibleWithProject": true,
+        "problems": []
+      },
+      "prior_receipt_hash": "67a8c293030cfa08f49525dd6481fce0ba2d16ffd26c5ae4fe43194d7af34a93",
+      "receipt_hash": "f7677717ae5682a736c4b7e8b8bbb9b06b212502317c5e284171b5e58e2f0fd5"
+    },
+    {
+      "schema_version": "1.0.0",
+      "receipt_id": "7b8a9fe6-4440-41be-b99a-fe95b7a71a79",
+      "kind": "compatibility",
+      "subject": "chrono-node@2.10.3",
+      "result": "PASS",
+      "created_at": "2026-11-15T23:56:37.612Z",
+      "environment": {
+        "runner": "service",
+        "node": "22.23.4",
+        "platform": "linux-x64",
+        "repo_commit": "9fed7654755162f5d36ca91a0b0258e2fecf245a",
+        "ci_run_url": null
+      },
+      "inputs": {
+        "pin": "2.10.3"
+      },
+      "outputs": {
+        "nodeVersion": "22.23.4",
+        "enginesRange": "^12.20.0 || ^14.13.1 || >=16.0.0",
+        "enginesSatisfied": true,
+        "installedVersion": "2.10.3",
+        "installedMatchesPin": true,
+        "lockfileIntegrity": "sha512-MOfrzXgSMZTH4SZ5gyRKQCVwiCrCKY+uYkSJiWoRLXS88DA6WGJm8UjgS+VVEuUQeew/UUXaxrO+SeDn/WCisg==",
+        "lockfileMatchesRegistry": true,
+        "importable": true,
+        "problems": []
+      },
+      "prior_receipt_hash": "f7677717ae5682a736c4b7e8b8bbb9b06b212502317c5e284171b5e58e2f0fd5",
+      "receipt_hash": "013692e79664f21e326e88f699aadae76dac63ad2e9dbbf65f139320ebc636a6"
+    },
+    {
+      "schema_version": "1.0.0",
+      "receipt_id": "2a12657d-26dd-46e1-b2ae-bce4af5e2de4",
+      "kind": "acceptance",
+      "subject": "chrono-node@2.10.3",
+      "result": "PASS",
+      "created_at": "2026-11-15T23:56:37.768Z",
+      "environment": {
+        "runner": "service",
+        "node": "22.23.4",
+        "platform": "linux-x64",
+        "repo_commit": "9fed7654755162f5d36ca91a0b0258e2fecf245a",
+        "ci_run_url": null
+      },
+      "inputs": {
+        "reference_date": "2026-11-15T12:00:00Z"
+      },
+      "outputs": [
+        {
+          "caseId": "relative-weekday",
+          "input": "Follow up with Dana next Friday",
+          "expected": "2026-11-20",
+          "actual": "2026-11-20",
+          "pass": true
+        },
+        {
+          "caseId": "absolute-month-day",
+          "input": "Send the deck by November 20",
+          "expected": "2026-11-20",
+          "actual": "2026-11-20",
+          "pass": true
+        },
+        {
+          "caseId": "tomorrow",
+          "input": "Book the venue tomorrow",
+          "expected": "2026-11-16",
+          "actual": "2026-11-16",
+          "pass": true
+        },
+        {
+          "caseId": "in-n-days",
+          "input": "Draft budget in 3 days",
+          "expected": "2026-11-18",
+          "actual": "2026-11-18",
+          "pass": true
+        },
+        {
+          "caseId": "iso-date",
+          "input": "Contract renewal on 2026-12-01",
+          "expected": "2026-12-01",
+          "actual": "2026-12-01",
+          "pass": true
+        },
+        {
+          "caseId": "month-day-time",
+          "input": "Investor call Dec 3 at 3pm",
+          "expected": "2026-12-03",
+          "actual": "2026-12-03",
+          "pass": true
+        },
+        {
+          "caseId": "no-date",
+          "input": "Think about pricing tiers",
+          "expected": null,
+          "actual": null,
+          "pass": true
+        }
+      ],
+      "prior_receipt_hash": "013692e79664f21e326e88f699aadae76dac63ad2e9dbbf65f139320ebc636a6",
+      "receipt_hash": "40543da8844e09608c07531724a908b451c2e3665eba9933e1f22fa29764ca18"
+    },
+    {
+      "schema_version": "1.0.0",
+      "receipt_id": "c14dca87-de1d-4e6f-8dda-7cb920a47274",
+      "kind": "artifact",
+      "subject": "action-items",
+      "result": "PASS",
+      "created_at": "2026-11-15T23:56:37.795Z",
+      "environment": {
+        "runner": "service",
+        "node": "22.23.4",
+        "platform": "linux-x64",
+        "repo_commit": "9fed7654755162f5d36ca91a0b0258e2fecf245a",
+        "ci_run_url": null
+      },
+      "inputs": {
+        "notes": "Weekly sync — Sunday\n- Dana: follow up with the printer next Friday\n- Send the revised deck to Marco by November 20\n- Book the venue tomorrow\n- Discussed pricing tiers, no decision\n- Sam: draft the Q1 budget in 3 days\n- Renew the hosting contract on 2026-12-01\n- Investor call Dec 3 at 3pm, prepare the one-pager\n- Think about hiring later\n"
+      },
+      "outputs": [
+        {
+          "text": "follow up with the printer next Friday",
+          "owner": "Dana",
+          "due": "2026-11-20",
+          "dueSource": "next Friday"
+        },
+        {
+          "text": "Send the revised deck to Marco by November 20",
+          "owner": null,
+          "due": "2026-11-20",
+          "dueSource": "November 20"
+        },
+        {
+          "text": "Book the venue tomorrow",
+          "owner": null,
+          "due": "2026-11-16",
+          "dueSource": "tomorrow"
+        },
+        {
+          "text": "draft the Q1 budget in 3 days",
+          "owner": "Sam",
+          "due": "2026-11-18",
+          "dueSource": "in 3 days"
+        },
+        {
+          "text": "Renew the hosting contract on 2026-12-01",
+          "owner": null,
+          "due": "2026-12-01",
+          "dueSource": "2026-12-01"
+        },
+        {
+          "text": "Investor call Dec 3 at 3pm, prepare the one-pager",
+          "owner": null,
+          "due": "2026-12-03",
+          "dueSource": "Dec 3 at 3pm"
+        }
+      ],
+      "prior_receipt_hash": "40543da8844e09608c07531724a908b451c2e3665eba9933e1f22fa29764ca18",
+      "receipt_hash": "092f8f81e40c3998997a9e30f274ce6c8410596789300a6d579b8b04b56cf5e1"
+    },
+    {
+      "schema_version": "1.0.0",
+      "receipt_id": "fd8d3e5a-1c2d-47a5-914d-e8ff39a1b6bb",
+      "kind": "summary",
+      "subject": "Small Agency Meetings",
+      "result": "INFO",
+      "created_at": "2026-11-15T23:56:37.801Z",
+      "environment": {
+        "runner": "service",
+        "node": "22.23.4",
+        "platform": "linux-x64",
+        "repo_commit": "9fed7654755162f5d36ca91a0b0258e2fecf245a",
+        "ci_run_url": null
+      },
+      "inputs": {},
+      "outputs": {
+        "selected": "chrono-node",
+        "status": "Tested",
+        "statusReason": "7/7 acceptance cases passed on service runner; Verified requires a clean CI run",
+        "chain_problems": []
+      },
+      "prior_receipt_hash": "092f8f81e40c3998997a9e30f274ce6c8410596789300a6d579b8b04b56cf5e1",
+      "receipt_hash": "8be5879585516216f3c079626632372a2ba5fea2026e3fcd49d213ccf57f9897"
+    }
+  ],
+  "chain_intact": true
+}
