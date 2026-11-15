@@ -2,7 +2,9 @@
 
 export type ComponentStatus = "Proposed" | "Integrated" | "Tested" | "Verified" | "Blocked";
 
-export type Runner = "local" | "ci";
+// local: developer machine; ci: independent clean runner (only path to Verified);
+// service: hosted web backend (founder requests; never counts as independent verification)
+export type Runner = "local" | "ci" | "service";
 
 export interface Capability {
   id: string;

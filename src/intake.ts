@@ -13,31 +13,27 @@ interface CapabilityRule {
 
 // Capability catalogue. Each capability maps to a registry search query.
 // Extend this as more component adapters are added.
+const cap = (id: string, description: string, searchQuery: string, triggers: RegExp[]): CapabilityRule => ({
+  capability: { id, description, searchQuery },
+  triggers,
+});
+
+// Building-block catalogue. A founder intent usually decomposes into several of these slices;
+// each maps to a registry search query. Extend as more component adapters are added.
 export const CAPABILITY_RULES: CapabilityRule[] = [
-  {
-    capability: {
-      id: "natural-language-date-parsing",
-      description: "Turn phrases like 'next Friday' or 'by Nov 20' into concrete dates",
-      searchQuery: "natural language date parser",
-    },
-    triggers: [/due date/i, /deadline/i, /\bdates?\b/i, /\bwhen\b.*\bdue\b/i, /schedul/i, /remind/i],
-  },
-  {
-    capability: {
-      id: "markdown-rendering",
-      description: "Render Markdown notes to HTML",
-      searchQuery: "markdown parser",
-    },
-    triggers: [/markdown/i],
-  },
-  {
-    capability: {
-      id: "schema-validation",
-      description: "Validate structured data",
-      searchQuery: "typescript schema validation",
-    },
-    triggers: [/validat/i, /\bschema\b/i],
-  },
+  cap("natural-language-date-parsing", "Turn phrases like 'next Friday' or 'by Nov 20' into concrete dates", "natural language date parser",
+    [/due date/i, /deadline/i, /\bdates?\b/i, /\bwhen\b.*\bdue\b/i, /schedul/i, /remind/i]),
+  cap("pdf-generation", "Generate PDF documents", "pdf generation", [/\bpdfs?\b/i, /invoice/i, /printable/i]),
+  cap("email-sending", "Send transactional email", "send email smtp", [/\be-?mails?\b/i, /newsletter/i, /notify by mail/i]),
+  cap("csv-parsing", "Import and export CSV / spreadsheet data", "csv parser", [/\bcsv\b/i, /spreadsheet/i, /excel/i, /import (data|contacts|rows)/i]),
+  cap("charts", "Render charts and data visualisations", "javascript charting library", [/\bcharts?\b/i, /\bgraphs?\b/i, /dashboard/i, /visuali[sz]/i]),
+  cap("fuzzy-search", "Fast in-app fuzzy search", "fuzzy search", [/search/i, /\bfind\b.*\bquickly\b/i, /lookup/i, /directory/i]),
+  cap("markdown-rendering", "Render Markdown notes to HTML", "markdown parser", [/markdown/i, /\bnotes?\b.*\bformat/i]),
+  cap("schema-validation", "Validate structured data", "typescript schema validation", [/validat/i, /\bschema\b/i, /\bforms?\b/i]),
+  cap("qr-codes", "Generate QR codes", "qr code generator", [/\bqr\b/i]),
+  cap("payments", "Accept payments", "stripe", [/payment/i, /\bcharge\b/i, /checkout/i, /subscription/i, /billing/i]),
+  cap("currency-money", "Exact money and currency arithmetic", "money currency arithmetic", [/currenc/i, /\bmoney\b/i, /\btax(es)?\b/i, /invoice/i]),
+  cap("unique-ids", "Generate unique IDs", "unique id generator", [/\bids?\b/i, /invoice numbers?/i, /tracking numbers?/i]),
 ];
 
 function detectStage(text: string): VentureSpec["stage"] {
@@ -72,9 +68,29 @@ function ventureName(text: string): string {
   return words.length ? words.map((w) => w[0].toUpperCase() + w.slice(1).toLowerCase()).join(" ") : "Untitled Venture";
 }
 
+const STOPWORDS = new Set(
+  ("about after again also because been before being build could does doing each from have having here into just like make " +
+    "more most much need only other over same should some something such than that their them then there these they thing " +
+    "this those through tool very want what when where which while will with would your idea people really able small").split(" "),
+);
+
+/** Fallback for intents outside the catalogue: derive a registry search query from content words. */
+export function deriveCapability(text: string): Capability | null {
+  const words = (text.toLowerCase().match(/[a-z][a-z\-]{3,}/g) ?? []).filter((w) => !STOPWORDS.has(w));
+  const counts = new Map<string, number>();
+  words.forEach((w, i) => counts.set(w, (counts.get(w) ?? 0) + 1 + 1 / (i + 10)));
+  const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([w]) => w);
+  if (top.length < 2) return null;
+  return { id: `derived:${top.join("-")}`, description: `Derived from founder intent: ${top.join(", ")}`, searchQuery: top.join(" ") };
+}
+
 export function intakeDeterministic(founderStatement: string): VentureSpec {
   const text = founderStatement.trim();
   const capabilities = CAPABILITY_RULES.filter((r) => r.triggers.some((t) => t.test(text))).map((r) => r.capability);
+  if (capabilities.length === 0) {
+    const derived = deriveCapability(text);
+    if (derived) capabilities.push(derived);
+  }
   const target_user = detectTargetUser(text);
   const open_questions: string[] = [];
   if (!target_user) open_questions.push("Who is the primary user?");

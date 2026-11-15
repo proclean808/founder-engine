@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PlatFormula.One — Founder Engine</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0d10;--card:#14171c;--line:#252a32;--fg:#e8eaed;--mute:#8b919a;--acc:#5b9cff;--ok:#1fae5b;--warn:#d98a0b;--bad:#e0443e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;padding:22px 16px 60px}
+h1{font-size:24px;margin:0;letter-spacing:-.01em}
+.sub{color:var(--mute);margin:4px 0 20px}
+section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0}
+h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:0 0 10px;font-weight:600}
+textarea{width:100%;min-height:120px;resize:vertical;background:#090b0e;border:1px solid var(--line);border-radius:8px;color:var(--fg);padding:10px;font:inherit}
+button{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:10px 16px;font:600 15px system-ui;cursor:pointer}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--fg)}
+button:disabled{opacity:.5;cursor:wait}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.pill{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;font-weight:700;color:#fff}
+.Verified,.PASS{background:var(--ok)}.Tested,.Integrated{background:var(--warn)}.Blocked,.FAIL{background:var(--bad)}.Proposed,.INFO,.NoCandidate{background:#4b525c}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-weight:500}
+code{font:12px ui-monospace,Menlo,monospace;color:#c6d0dc;word-break:break-all}
+.mute{color:var(--mute)}.small{font-size:12.5px}
+.comp{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0}
+.comp b{font-size:15px}
+details summary{cursor:pointer;color:var(--mute)}
+.err{color:var(--bad)}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--mute);border-top-color:transparent;border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px}
+@keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<main>
+<h1>Founder Engine</h1>
+<p class="sub">PlatFormula.One · Describe what you want to build. The engine turns your intent into a spec, finds open-source components, verifies their provenance and licenses, integrates and tests what it can, and records evidence for every step.</p>
+
+<section>
+  <h2>Your intent</h2>
+  <textarea id="intent" placeholder="e.g. I want a tool for small team leads that turns meeting notes into action items with owners and due dates like 'next Friday'…"></textarea>
+  <div class="row">
+    <button id="run">Curate my stack</button>
+    <button class="ghost" id="example">Use example</button>
+    <span id="state" class="mute small"></span>
+  </div>
+</section>
+
+<div id="out"></div>
+
+<section>
+  <h2>Live tool · meeting notes → action items</h2>
+  <p class="mute small">The working artifact built from the verified component (chrono-node). Paste notes, one item per line.</p>
+  <textarea id="notes">- Dana: follow up with the printer next Friday
+- Send the revised deck to Marco by November 20
+- Sam: draft the Q1 budget in 3 days
+- Discussed pricing, no decision</textarea>
+  <div class="row"><button id="extract">Extract</button></div>
+  <div id="items"></div>
+</section>
+
+<p class="mute small" id="health"></p>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const pill = (s) => `<span class="pill ${esc(s)}">${esc(s)}</span>`;
+const EXAMPLE = "I run a small agency and our meetings end with a pile of notes nobody turns into tasks. I want to build a tool for small team leads that reads raw meeting notes and pulls out the action items, who owns them, and the due dates people mention like \"next Friday\" or \"by Nov 20\". I can't code, I have no budget, and I'd like it to work offline.";
+$("example").onclick = () => ($("intent").value = EXAMPLE);
+
+async function post(path, body) {
+  const r = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
+  if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
+  return j;
+}
+
+function itemsTable(items) {
+  if (!items?.length) return `<p class="mute">No action items found.</p>`;
+  return `<table><tr><th>Action</th><th>Owner</th><th>Due</th></tr>${items.map((i) => `<tr><td>${esc(i.text)}</td><td>${esc(i.owner ?? "—")}</td><td>${esc(i.due ?? "—")}</td></tr>`).join("")}</table>`;
+}
+
+function render(d) {
+  const s = d.spec;
+  const acc = [...d.receipts].reverse().find((r) => r.kind === "acceptance");
+  const comps = [...d.registry].sort((a, b) => (a.name === d.selected ? -1 : b.name === d.selected ? 1 : 0));
+  $("out").innerHTML = `
+  <section>
+    <h2>Result</h2>
+    <p>${pill(d.status)} ${esc(d.status_reason)}</p>
+    <p class="mute small">Run ${esc(d.run_id)} · runner <b>${esc(d.runner)}</b> · ${d.receipts.length} receipts · chain ${d.chain_intact ? "intact" : "<span class='err'>BROKEN</span>"}${d.engine_commit ? ` · engine <code>${esc(d.engine_commit.slice(0, 7))}</code>` : ""}</p>
+    ${d.runner !== "ci" ? `<p class="mute small">Hosted runs top out at <b>Tested</b>. <b>Verified</b> is reserved for the independent CI runner.</p>` : ""}
+  </section>
+  <section>
+    <h2>Venture spec</h2>
+    <p><b>${esc(s.venture_name)}</b> · stage ${esc(s.stage)} · ${esc(s.extraction_method)}</p>
+    <p>${esc(s.problem)}</p>
+    <p class="small"><span class="mute">Target user:</span> ${esc(s.target_user ?? "unknown")}<br>
+    <span class="mute">Capability:</span> ${s.capabilities.map((c) => `${esc(c.description)} <code>${esc(c.searchQuery)}</code>`).join("; ") || "none identified"}<br>
+    <span class="mute">Constraints:</span> ${esc(s.constraints.join(", ") || "none stated")}</p>
+    <p class="small mute">Open questions: ${s.open_questions.map(esc).join(" · ")}</p>
+  </section>
+  <section>
+    <h2>Curated components</h2>
+    ${comps.length ? comps.map((c) => `<div class="comp"><b>${esc(c.name)}</b>@${esc(c.version)} ${pill(c.status)} ${c.name === d.selected ? `<span class="pill" style="background:var(--acc)">selected</span>` : ""}
+      <div class="small">License: <b>${esc(c.license ?? "unverified")}</b>${c.upstreamAuthor ? ` · ${esc(c.upstreamAuthor)}` : ""}</div>
+      <div class="small mute">${esc(c.repository ?? "")}${c.pinnedCommit ? ` @ <code>${esc(c.pinnedCommit.slice(0, 12))}</code>` : ""}</div>
+      <div class="small">${esc(c.statusReason)}</div></div>`).join("") : `<p class="mute">No eligible components found for this intent.</p>`}
+  </section>
+  ${acc ? `<section><h2>Acceptance test ${pill(acc.result)}</h2><table><tr><th>Input</th><th>Expected</th><th>Actual</th><th></th></tr>${acc.outputs.map((r) => `<tr><td>${esc(r.input)}</td><td>${esc(r.expected ?? "null")}</td><td>${esc(r.actual ?? "null")}</td><td>${pill(r.pass ? "PASS" : "FAIL")}</td></tr>`).join("")}</table></section>` : ""}
+  ${d.artifact ? `<section><h2>Generated artifact</h2>${itemsTable(d.artifact)}</section>` : ""}
+  <section><details><summary>Evidence receipts (${d.receipts.length}, hash-chained)</summary>
+    <table class="small"><tr><th>#</th><th>Kind</th><th>Subject</th><th></th><th>Hash</th></tr>${d.receipts.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.kind)}</td><td>${esc(r.subject)}</td><td>${pill(r.result)}</td><td><code>${esc(r.receipt_hash.slice(0, 16))}</code></td></tr>`).join("")}</table>
+    <div class="row"><button class="ghost" id="dl">Download run JSON</button></div>
+  </details></section>`;
+  $("dl").onclick = () => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(d, null, 2)], { type: "application/json" }));
+    a.download = `founder-engine-run-${d.run_id}.json`;
+    a.click();
+  };
+}
+
+$("run").onclick = async () => {
+  const intent = $("intent").value.trim();
+  if (intent.length < 20) return ($("state").textContent = "Describe your idea in at least a sentence.");
+  $("run").disabled = true;
+  $("state").innerHTML = `<span class="spin"></span> discovering, verifying licenses, testing… (10–30 s)`;
+  try {
+    render(await post("/api/curate", { intent }));
+    $("state").textContent = "";
+  } catch (e) {
+    $("state").innerHTML = `<span class="err">${esc(e.message)}</span>`;
+  } finally {
+    $("run").disabled = false;
+  }
+};
+
+$("extract").onclick = async () => {
+  try {
+    const d = await post("/api/extract", { notes: $("notes").value });
+    $("items").innerHTML = `<p class="mute small">Reference date ${esc(d.reference_date)}</p>${itemsTable(d.items)}`;
+  } catch (e) {
+    $("items").innerHTML = `<p class="err">${esc(e.message)}</p>`;
+  }
+};
+
+fetch("/api/health").then((r) => r.json()).then((h) => {
+  $("health").textContent = `${h.engine} ${h.version}${h.commit ? " · " + h.commit.slice(0, 7) : ""} · node ${h.node} · runner ${h.runner}`;
+}).catch(() => {});
+</script>
+</body>
+</html>

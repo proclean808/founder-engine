@@ -26,6 +26,20 @@ echo "- Dana: send invoice next Friday" | npm run extract --silent
 
 Requires Node ≥ 20 and `git` on PATH. Works in Termux (`pkg install nodejs git`).
 
+## Web backend (Vercel)
+
+`public/index.html` together with three functions, all thin wrappers over `src/web.ts`:
+
+| Endpoint | What it does |
+|---|---|
+| `POST /api/curate` `{intent}` | Runs the real pipeline for a founder's intent in an isolated temp dir. The intent is decomposed into building-block capabilities (dates, PDF, payments, search, CSV, email, charts, …), with one npm discovery per capability. The top candidates get provenance and license vetting. A candidate that has an adapter and an exact pin goes on to full integration, the acceptance test and the artifact. Returns the spec, registry, receipts and artifact. |
+| `POST /api/extract` `{notes, ref?}` | The working tool: notes → action items |
+| `GET /api/health` | Engine version, commit and pinned components |
+
+On the hosted backend the runner is `service`, so results top out at **Tested**. Only CI marks **Verified**. Tag resolution uses git smart-HTTP (`info/refs`), so no `git` binary or GitHub API token is needed. Runs are stateless: the full result, including receipts, is returned and can be downloaded. Durable storage is not wired yet.
+
+Curation candidates pass vetting when the tarball hash matches, the recorded source commit is confirmed upstream (by a release tag, or by fetching the license at that commit) and the license text matches upstream. Integrated dependencies are held to the stricter rule: the release tag must equal the registry `gitHead`.
+
 ## Building any repository, including this one
 
 ```bash

@@ -181,3 +181,28 @@ test("provider: LLM intake that returns junk falls back to deterministic extract
 test("provider: unconfigured env yields no provider (no silent mock)", () => {
   assert.equal(providerFromEnv({}), null);
 });
+
+test("web: input validation and the extract endpoint", async () => {
+  const { handleExtract, handleCurate, HttpError } = await import("../src/web.js");
+  const r = handleExtract({ notes: "- Sam: send invoice tomorrow", ref: "2026-11-15" });
+  assert.deepEqual(r.items[0], { text: "send invoice tomorrow", owner: "Sam", due: "2026-11-16", dueSource: "tomorrow" });
+  assert.throws(() => handleExtract({ notes: "" }), HttpError);
+  assert.throws(() => handleExtract({ notes: "x", ref: "15/11/2026" }), /YYYY-MM-DD/);
+  await assert.rejects(handleCurate({ intent: "too short" }), /20-4000/);
+});
+
+test("intake: off-catalogue intents get a derived search capability", async () => {
+  const { deriveCapability } = await import("../src/intake.js");
+  const c = deriveCapability("I want an invoice generator that exports invoices to PDF for freelancers");
+  assert.ok(c && c.id.startsWith("derived:") && /invoice/.test(c.searchQuery));
+});
+
+test("provenance: parses git smart-HTTP ref advertisement with peeled tags", async () => {
+  const { parseRefAdvertisement } = await import("../src/provenance.js");
+  const pkt = (s: string) => (s.length + 4).toString(16).padStart(4, "0") + s;
+  const a = "a".repeat(40), b = "b".repeat(40);
+  const body = pkt("# service=git-upload-pack\n") + "0000" + pkt(`${a} refs/tags/v1.0.0\0caps\n`) + pkt(`${b} refs/tags/v1.0.0^{}\n`) + "0000";
+  const refs = parseRefAdvertisement(body);
+  assert.equal(refs.get("refs/tags/v1.0.0"), a);
+  assert.equal(refs.get("refs/tags/v1.0.0^{}"), b);
+});

@@ -25,9 +25,12 @@ const ADAPTERS: Record<string, { acceptance: () => ReturnType<typeof runChronoAc
 
 export interface PipelineOptions {
   projectRoot: string;
-  founderInputPath: string;
-  sampleNotesPath: string;
+  founderInputPath?: string;
+  founderInput?: string;
+  sampleNotesPath?: string;
+  sampleNotes?: string;
   stateDir?: string;
+  vetTop?: number; // how many eligible candidates get provenance + license vetting (default 3)
   log?: (msg: string) => void;
 }
 
@@ -52,7 +55,7 @@ export async function runPipeline(opts: PipelineOptions): Promise<PipelineOutcom
   const projectPkg = JSON.parse(readFileSync(join(opts.projectRoot, "package.json"), "utf8"));
 
   // 1. Founder input -> structured spec
-  const founderInput = readFileSync(opts.founderInputPath, "utf8");
+  const founderInput = opts.founderInput ?? readFileSync(opts.founderInputPath ?? join(opts.projectRoot, "fixtures/founder-idea.txt"), "utf8");
   const provider = providerFromEnv();
   const spec = provider ? await intakeWithProvider(founderInput, provider) : intakeDeterministic(founderInput);
   mkdirSync(stateDir, { recursive: true });
@@ -69,28 +72,62 @@ export async function runPipeline(opts: PipelineOptions): Promise<PipelineOutcom
   });
   log(`intake: ${spec.venture_name} (${spec.extraction_method}); capabilities=${spec.capabilities.map((c) => c.id).join(",")}`);
 
-  const capability = spec.capabilities[0];
+  let capability = spec.capabilities[0];
   let selected: RankedCandidate | null = null;
   let status: PipelineOutcome["status"] = "NoCandidate";
   let statusReason = "no capability identified; founder must answer open questions";
 
   if (capability) {
-    // 2. Repository discovery
-    const ranked = rankCandidates(await searchRegistry(capability));
-    evidence.record("discovery", capability.id, "INFO", { query: capability.searchQuery }, ranked);
-    log(`discovery: ${ranked.length} candidates, ${ranked.filter((r) => r.eligible).length} eligible`);
-    for (const c of ranked.filter((r) => r.eligible).slice(0, 3)) {
-      if (!registry.get(c.name)) {
-        registry.upsert({
-          name: c.name, version: c.version, capability: capability.id, repository: c.repositoryUrl,
-          upstreamAuthor: null, license: c.declaredLicense, pinnedCommit: null, integrity: null,
-          status: "Proposed", statusReason: "eligible on declared metadata (unverified)", evidence: [],
-        });
+    // 2. Repository discovery, one search per building-block capability
+    const caps = spec.capabilities.slice(0, 4);
+    const discovered = await Promise.all(caps.map(async (cap) => {
+      const ranked = rankCandidates(await searchRegistry(cap));
+      evidence.record("discovery", cap.id, "INFO", { query: cap.searchQuery }, ranked);
+      return { cap, ranked };
+    }));
+    for (const d of discovered) {
+      log(`discovery[${d.cap.id}]: ${d.ranked.length} candidates, ${d.ranked.filter((r) => r.eligible).length} eligible`);
+      const withAdapter = d.ranked.find((r) => r.eligible && ADAPTERS[r.name]);
+      if (!selected && withAdapter) {
+        selected = withAdapter;
+        capability = d.cap;
       }
     }
-    selected = ranked.find((r) => r.eligible && ADAPTERS[r.name]) ?? null;
+    // Curation: vet the top eligible candidates per capability (provenance + license), adapter or not.
+    const perCap = opts.vetTop ?? (caps.length > 1 ? 2 : 3);
+    const toVet = discovered.flatMap((d) => d.ranked.filter((r) => r.eligible && r.name !== selected?.name).slice(0, perCap).map((c) => ({ c, cap: d.cap })));
+    const vetted = await Promise.all(toVet.map(async ({ c, cap }) => {
+      try {
+        const { provenance, meta, tarball } = await verifyProvenance(c.name, c.version);
+        const lic = await verifyLicense(readTgz(tarball), provenance.repository, provenance.gitHead);
+        return { c, cap, provenance, meta, lic, error: null as string | null };
+      } catch (e) {
+        return { c, cap, provenance: null, meta: null, lic: null, error: (e as Error).message };
+      }
+    }));
+    let vettedOk = 0;
+    for (const v of vetted) {
+      const problems = v.error ? [v.error] : [...vettingProvenanceProblems(v.provenance!, v.lic!.upstreamLicenseUrl), ...v.lic!.problems];
+      if (!problems.length) vettedOk++;
+      const { licenseText: _t, ...licSummary } = v.lic ?? { licenseText: null };
+      const basis = v.provenance?.gitHeadMatchesTag ? "release tag" : "commit present upstream";
+      const r = evidence.record("vetting", `${v.c.name}@${v.c.version}`, problems.length ? "FAIL" : "PASS", { candidate: v.c.name, version: v.c.version, capability: v.cap.id }, { provenance: v.provenance, provenance_basis: problems.length ? null : basis, license: v.lic ? licSummary : null, problems });
+      const author = v.meta ? (typeof v.meta.author === "string" ? v.meta.author : v.meta.author?.name) ?? v.lic?.copyrightLine?.replace(/^copyright\s*(\(c\)|©)?\s*[\d,\- ]*/i, "").trim() ?? null : null;
+      registry.upsert({
+        name: v.c.name, version: v.c.version, capability: v.cap.id, repository: v.provenance?.repository ?? v.c.repositoryUrl,
+        upstreamAuthor: author, license: v.lic?.spdx ?? null, pinnedCommit: v.provenance?.gitHead ?? null, integrity: v.provenance?.integrity ?? null,
+        status: problems.length ? "Blocked" : "Proposed",
+        statusReason: problems.length ? problems.join("; ") : `vetted (${basis}; ${v.lic!.spdx} text matches upstream); no integration adapter yet`,
+        evidence: [r.receipt_hash],
+      });
+    }
+    log(`vetting: ${vettedOk}/${vetted.length} candidates passed provenance + license`);
+    if (!selected && vettedOk > 0) {
+      status = "Proposed";
+      statusReason = `${vettedOk} of ${vetted.length} candidates across ${caps.length} capabilit${caps.length > 1 ? "ies" : "y"} passed provenance + license vetting; an integration adapter is needed before assembly`;
+    }
     if (!selected) {
-      statusReason = "eligible candidates found but none has an integration adapter yet";
+      if (status === "NoCandidate") statusReason = "no candidate passed vetting; refine the intent or answer the open questions";
     } else {
       const pin: string | undefined = projectPkg.dependencies?.[selected.name];
       // 3. Authorization gate: a dependency enters only via a committed exact pin.
@@ -130,7 +167,7 @@ export async function runPipeline(opts: PipelineOptions): Promise<PipelineOutcom
           registry.setStatus(selected.name, "Blocked", statusReason);
         } else {
           registry.setStatus(selected.name, "Integrated", "pinned; provenance, license and compatibility checks passed");
-          writeNotices(opts.projectRoot, selected.name, pin, provenance.repository, provenance.gitHead, lic.copyrightLine, licenseText);
+          writeNotices(stateDir, selected.name, pin, provenance.repository, provenance.gitHead, lic.copyrightLine, licenseText);
 
           // 5. Executable acceptance test
           const results = ADAPTERS[selected.name].acceptance();
@@ -144,7 +181,7 @@ export async function runPipeline(opts: PipelineOptions): Promise<PipelineOutcom
             statusReason = `${results.length}/${results.length} acceptance cases passed on independent CI runner`;
           } else {
             status = "Tested";
-            statusReason = `${results.length}/${results.length} acceptance cases passed locally; Verified requires a clean CI run`;
+            statusReason = `${results.length}/${results.length} acceptance cases passed on ${runner} runner; Verified requires a clean CI run`;
           }
           registry.setStatus(selected.name, status, statusReason, rTest.receipt_hash);
           log(`acceptance: ${results.filter((r) => r.pass).length}/${results.length} -> ${status}`);
@@ -167,7 +204,7 @@ export async function runPipeline(opts: PipelineOptions): Promise<PipelineOutcom
   // 7. Usable artifact (only when the component cleared integration)
   let artifactPath: string | null = null;
   if (status === "Tested" || status === "Verified") {
-    const notes = readFileSync(opts.sampleNotesPath, "utf8");
+    const notes = opts.sampleNotes ?? readFileSync(opts.sampleNotesPath ?? join(opts.projectRoot, "fixtures/meeting-notes.txt"), "utf8");
     const items = extractActionItems(notes, new Date(REFERENCE_DATE));
     const dir = join(stateDir, "artifacts");
     mkdirSync(dir, { recursive: true });
@@ -194,6 +231,20 @@ export async function runPipeline(opts: PipelineOptions): Promise<PipelineOutcom
   writeFileSync(workspacePath, renderWorkspace({ spec, registry: registry.list(), receipts: evidence.all(), knowledge: kb.list(), artifactPath, status, statusReason }));
 
   return { spec, selected: selected?.name ?? null, status, statusReason, receipts: evidence.all().length, chainProblems, artifactPath, workspacePath };
+}
+
+/**
+ * Provenance for curation candidates: the tarball must match its registry hash and the recorded
+ * commit must exist upstream (proved by a matching release tag, or by fetching the license file
+ * at that commit). Integrated dependencies are held to the stricter release-tag rule above.
+ */
+export function vettingProvenanceProblems(p: { tarballSha512Matches: boolean; gitHead: string | null; tagCommit: string | null; gitHeadMatchesTag: boolean }, upstreamLicenseUrl: string | null): string[] {
+  const out: string[] = [];
+  if (!p.tarballSha512Matches) out.push("tarball sha512 does not match registry integrity");
+  if (!p.gitHead) out.push("registry records no source commit (gitHead)");
+  else if (p.tagCommit && !p.gitHeadMatchesTag) out.push("upstream release tag points at a different commit than the registry");
+  else if (!p.tagCommit && !upstreamLicenseUrl) out.push("source commit not confirmed upstream");
+  return out;
 }
 
 function writeNotices(root: string, name: string, version: string, repo: string | null, commit: string | null, copyright: string | null, text: string | null) {

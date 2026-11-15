@@ -28,7 +28,9 @@ export interface Receipt {
 }
 
 export function detectRunner(env: NodeJS.ProcessEnv = process.env): Runner {
-  return env.GITHUB_ACTIONS === "true" ? "ci" : "local";
+  if (env.GITHUB_ACTIONS === "true") return "ci";
+  if (env.VERCEL === "1" || env.FE_RUNNER === "service") return "service";
+  return "local";
 }
 
 function repoCommit(): string | null {
