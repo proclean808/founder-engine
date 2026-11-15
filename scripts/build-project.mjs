@@ -37,8 +37,8 @@ try {
   await run('npm', ['ci', '--ignore-scripts'], source);
   await run('npm', ['test'], source);
   await run('npm', ['run', 'build'], source);
-  const pack = await run('npm', ['pack', '--json', '--ignore-scripts'], source);
-  const filename = JSON.parse(pack.slice(pack.lastIndexOf('[\n  {')))[0].filename;
+  const pack = await run('npm', ['pack', '--silent', '--ignore-scripts'], source);
+  const filename = pack.trim().split('\n').at(-1).trim();
   const archive = join(source, filename);
   const digest = createHash('sha256').update(await readFile(archive)).digest('hex');
   await mkdir(second);
