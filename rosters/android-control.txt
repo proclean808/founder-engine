@@ -1,0 +1,17 @@
+# Two-phone Android control plane: candidate components (from research notes; claims unverified until vetted)
+# command channel / shell
+turin-dev/rish-mcp
+RikkaApps/Shizuku
+termux/termux-app
+termux/termux-api
+# agent device control
+Good-karma-lab/mobileclaw
+4ier/claw-use-android
+# graphical control channel
+Genymobile/scrcpy
+bk138/droidVNC-NG
+rustdesk/rustdesk
+gujjwal00/avnc
+bk138/multivnc
+# discovery index (not a component)
+rdevz-ph/awesome-shizuku-web

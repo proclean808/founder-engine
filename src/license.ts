@@ -3,6 +3,7 @@
 // in the upstream repository at the pinned commit, plus a clause check of the text itself.
 import { createHash } from "node:crypto";
 import type { LicenseFinding } from "./types.js";
+import { fetchGithubFile } from "./provenance.js";
 
 const LICENSE_FILE = /^package\/(LICEN[CS]E|COPYING)(\.(txt|md))?$/i;
 const UPSTREAM_NAMES = ["LICENSE", "LICENSE.txt", "LICENSE.md", "LICENCE", "COPYING"];
@@ -38,9 +39,8 @@ async function fetchUpstreamLicense(repo: string, commit: string): Promise<{ url
   const gh = repo.match(/^https:\/\/github\.com\/([^/]+\/[^/]+)$/);
   if (!gh) return null; // only GitHub supported in milestone 1
   for (const f of UPSTREAM_NAMES) {
-    const url = `https://raw.githubusercontent.com/${gh[1]}/${commit}/${f}`;
-    const res = await fetch(url);
-    if (res.ok) return { url, text: await res.text() };
+    const hit = await fetchGithubFile(gh[1], commit, f);
+    if (hit) return hit;
   }
   return null;
 }

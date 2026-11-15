@@ -34,11 +34,36 @@ Requires Node ≥ 20 and `git` on PATH. Works in Termux (`pkg install nodejs git
 |---|---|
 | `POST /api/curate` `{intent}` | Runs the real pipeline for a founder's intent in an isolated temp dir. The intent is decomposed into building-block capabilities (dates, PDF, payments, search, CSV, email, charts, …), with one npm discovery per capability. The top candidates get provenance and license vetting. A candidate that has an adapter and an exact pin goes on to full integration, the acceptance test and the artifact. Returns the spec, registry, receipts and artifact. |
 | `POST /api/extract` `{notes, ref?}` | The working tool: notes → action items |
+| `POST /api/vet-repos` `{repos: ["owner/repo", …]}` | Repository-level vetting for non-npm components (Android apps, CLIs, services): pins the latest release tag (or default-branch HEAD), reads the licence at that commit, and classifies how the code can be reused |
 | `GET /api/health` | Engine version, commit and pinned components |
 
 On the hosted backend the runner is `service`, so results top out at **Tested**. Only CI marks **Verified**. Tag resolution uses git smart-HTTP (`info/refs`), so no `git` binary or GitHub API token is needed. Runs are stateless: the full result, including receipts, is returned and can be downloaded. Durable storage is not wired yet.
 
 Curation candidates pass vetting when the tarball hash matches, the recorded source commit is confirmed upstream (by a release tag, or by fetching the license at that commit) and the license text matches upstream. Integrated dependencies are held to the stricter rule: the release tag must equal the registry `gitHead`.
+
+## Repository vetting (non-npm components)
+
+```bash
+node dist/src/cli.js vet-repos rosters/android-control.txt --out rosters/android-control.results.json
+```
+
+Each repo is handled the same way:
+1. Resolve refs over git smart-HTTP.
+2. Pin the latest semver release tag (peeled), or the default-branch HEAD if there are no tags.
+3. Fetch the licence file at that commit. raw.githubusercontent.com is tried first, then github.com's redirect, which follows transferred or renamed repos.
+4. Classify the licence from its text.
+
+Each result records where the licence evidence came from: `full-text`, `declaration-in-license-file` or `readme-declaration`. It also records a reuse mode:
+
+| Mode | Licences | Meaning |
+|---|---|---|
+| `embed` | MIT, BSD, ISC | Code may be copied into MIT modules |
+| `embed-with-notice` | Apache-2.0 | Same, keeping the NOTICE |
+| `separate-process-only` | GPL | Run as a separate app or process only |
+| `network-copyleft` | AGPL | Run as a separate service, or publish changes |
+| `file-copyleft` | MPL, LGPL, CC-BY-SA | Share-alike applies to the licensed files |
+
+This is a mechanical reading of the licence text, not legal advice. See `rosters/android-control.md` for the two-phone control-plane roster.
 
 ## Building any repository, including this one
 

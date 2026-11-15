@@ -15,6 +15,8 @@ import { KnowledgeBase } from "./knowledge.js";
 import { providerFromEnv } from "./provider.js";
 import { EvidenceLog, detectRunner } from "./evidence.js";
 import { buildProject } from "./build-project.js";
+import { vetRepo } from "./repo-vetting.js";
+import { writeFileSync } from "node:fs";
 
 const [, , cmd, ...rest] = process.argv;
 const flag = (name: string) => {
@@ -75,8 +77,28 @@ async function main(): Promise<number> {
       const report = buildProject({ repo, rev, workDir: work, log: (m) => console.log(`[depth ${process.env.FE_BUILD_DEPTH ?? 0}] ${m}`) });
       return report.verdict === "PASS" ? 0 : 1;
     }
+    case "vet-repos": {
+      // vet-repos <roster.txt | owner/repo ...> [--out results.json]
+      const args = rest.filter((a, i) => !a.startsWith("--") && rest[i - 1] !== "--out");
+      const list = args.length === 1 && args[0].endsWith(".txt")
+        ? readFileSync(args[0], "utf8").split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#"))
+        : args;
+      if (!list.length) { console.error("usage: vet-repos <roster.txt | owner/repo ...> [--out file.json]"); return 2; }
+      const log = new EvidenceLog(resolve(flag("out")?.replace(/\.json$/, ".evidence.jsonl") ?? "state/evidence/repo-vetting.jsonl"));
+      const results = [];
+      for (const r of list) {
+        let v;
+        try { v = await vetRepo(r); } catch (e) { console.log(`${r}: ERROR ${(e as Error).message}`); continue; }
+        log.record("repo-vetting", v.repo, v.status === "Proposed" ? "PASS" : "FAIL", { input: r }, v);
+        results.push(v);
+        console.log(`${v.status.padEnd(8)} ${v.repo.replace("https://github.com/", "").padEnd(34)} ${(v.spdx ?? "-").padEnd(12)} ${v.reuse.padEnd(22)} ${(v.latestTag ?? v.defaultBranch ?? "-").padEnd(14)} ${(v.pinnedCommit ?? "").slice(0, 10)}  ${v.problems.join("; ")}`);
+      }
+      if (flag("out")) writeFileSync(resolve(flag("out")!), JSON.stringify(results, null, 2) + "\n");
+      console.log(`\n${results.filter((r) => r.status === "Proposed").length}/${list.length} vetted · chain ${log.verifyChain().length ? "BROKEN" : "intact"}`);
+      return 0;
+    }
     default:
-      console.log("usage: founder-engine run|intake|extract|ask|verify-evidence|build-project");
+      console.log("usage: founder-engine run|intake|extract|ask|verify-evidence|build-project|vet-repos");
       return cmd ? 2 : 0;
   }
 }

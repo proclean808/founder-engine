@@ -206,3 +206,18 @@ test("provenance: parses git smart-HTTP ref advertisement with peeled tags", asy
   assert.equal(refs.get("refs/tags/v1.0.0"), a);
   assert.equal(refs.get("refs/tags/v1.0.0^{}"), b);
 });
+
+test("repo vetting: license classification, declarations, release-tag pinning", async () => {
+  const { classifyLicense, classifyDeclaration, latestReleaseTag, normalizeGithubRepo } = await import("../src/repo-vetting.js");
+  assert.equal(classifyLicense(MIT), "MIT");
+  assert.equal(classifyLicense("GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007"), "AGPL-3.0");
+  assert.equal(classifyLicense("GNU GENERAL PUBLIC LICENSE Version 2, June 1991"), "GPL-2.0");
+  assert.equal(classifyLicense("GNU LESSER GENERAL PUBLIC LICENSE Version 2.1, February 1999"), "LGPL-2.1");
+  assert.equal(classifyLicense("Apache License Version 2.0, January 2004"), "Apache-2.0");
+  assert.equal(classifyLicense("All rights reserved."), null);
+  assert.equal(classifyDeclaration("The repo is released under [GPLv3 only](https://www.gnu.org/licenses/gpl-3.0.html) license."), "GPL-3.0");
+  const a = "a".repeat(40), b = "b".repeat(40), c = "c".repeat(40);
+  const refs = new Map([["refs/tags/v1.9.0", a], ["refs/tags/v1.10.0", b], ["refs/tags/v1.10.0^{}", c], ["refs/tags/nightly", a]]);
+  assert.deepEqual(latestReleaseTag(refs), { tag: "v1.10.0", commit: c });
+  assert.equal(normalizeGithubRepo("git+https://github.com/Owner/Repo.git"), "https://github.com/Owner/Repo");
+});

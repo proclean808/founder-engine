@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { runPipeline } from "./pipeline.js";
 import { extractActionItems } from "./product/actionItems.js";
 import { EvidenceLog, detectRunner } from "./evidence.js";
+import { vetRepo } from "./repo-vetting.js";
 
 export const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
@@ -80,4 +81,20 @@ export function handleHealth() {
     node: process.versions.node,
     pinned_components: pkg.dependencies,
   };
+}
+
+export async function handleVetRepos(body: unknown) {
+  const b = (body ?? {}) as Record<string, unknown>;
+  if (!Array.isArray(b.repos) || b.repos.length === 0 || b.repos.length > 15) throw new HttpError(400, "repos must be an array of 1-15 GitHub owner/repo strings");
+  const repos = b.repos.map((r, i) => str(r, `repos[${i}]`, 3, 200)!);
+  const log = new EvidenceLog(join(mkdtempSync(join(tmpdir(), "fe-vet-")), "evidence.jsonl"));
+  const results = await Promise.all(repos.map(async (r) => {
+    try {
+      return await vetRepo(r);
+    } catch (e) {
+      return { repo: r, status: "Blocked" as const, problems: [(e as Error).message] };
+    }
+  }));
+  for (const v of results) log.record("repo-vetting", v.repo, v.status === "Proposed" ? "PASS" : "FAIL", {}, v);
+  return { runner: detectRunner(), results, receipts: log.all(), chain_intact: log.verifyChain().length === 0 };
 }

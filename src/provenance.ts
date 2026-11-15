@@ -127,3 +127,20 @@ export async function verifyProvenance(
     },
   };
 }
+
+/**
+ * Fetch a file from a GitHub repo at an exact commit. raw.githubusercontent.com first; if that 404s
+ * (it is case-sensitive about owner/repo), github.com/<slug>/raw/<commit>/<file>, which redirects
+ * to the canonical path.
+ */
+export async function fetchGithubFile(slug: string, commit: string, file: string): Promise<{ url: string; text: string } | null> {
+  for (const url of [`https://raw.githubusercontent.com/${slug}/${commit}/${file}`, `https://github.com/${slug}/raw/${commit}/${file}`]) {
+    try {
+      const r = await fetch(url);
+      if (r.ok) return { url: r.url || url, text: await r.text() };
+    } catch {
+      /* try next */
+    }
+  }
+  return null;
+}
