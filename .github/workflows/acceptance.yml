@@ -1,0 +1,48 @@
+# Independent verification: a clean GitHub-hosted runner that has never seen the build
+# session installs from the lockfile, runs the unit tests, then runs the full acceptance
+# pipeline against the live npm registry and upstream git repository.
+# Only a passing run here moves a component to "Verified".
+name: acceptance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Install exactly what the lockfile pins
+        run: npm ci
+      - name: Unit tests
+        run: npm test
+      - name: End-to-end acceptance pipeline
+        run: npm run pipeline
+      - name: Assert Verified status and intact evidence chain
+        run: |
+          node dist/src/cli.js verify-evidence state/evidence/ci.jsonl
+          node -e '
+            const r = require("./state/registry.json").find(e => e.name === "chrono-node");
+            console.log(r.name, r.version, r.status, "-", r.statusReason);
+            if (r.status !== "Verified") process.exit(1);
+          '
+      - name: Product smoke test
+        run: npm run extract -- fixtures/meeting-notes.txt --ref 2026-11-15
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: evidence-node${{ matrix.node }}
+          path: state/

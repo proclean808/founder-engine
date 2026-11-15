@@ -1,0 +1,1 @@
+I run a small agency and our meetings end with a pile of notes nobody turns into tasks. I want to build a tool for small team leads that reads raw meeting notes and pulls out the action items, who owns them, and the due dates people mention like "next Friday" or "by Nov 20". I can't code, I have no budget, and I'd like it to work offline.
