@@ -38,14 +38,14 @@ try {
   await run('npm', ['test'], source);
   await run('npm', ['run', 'build'], source);
   const pack = await run('npm', ['pack', '--json', '--ignore-scripts'], source);
-  const filename = JSON.parse(pack)[0].filename;
+  const filename = JSON.parse(pack.slice(pack.indexOf('\n[') + 1))[0].filename;
   const archive = join(source, filename);
   const digest = createHash('sha256').update(await readFile(archive)).digest('hex');
   await mkdir(second);
   await writeFile(join(second, 'package.json'), JSON.stringify({ name: 'rebuild-consumer', private: true, type: 'module', version: '1.0.0' }));
   await run('npm', ['install', '--ignore-scripts', archive], second);
   const pkg = JSON.parse(await readFile(join(source, 'package.json'), 'utf8'));
-  await run('node', ['-e', `import(${JSON.stringify(pkg.name)}).then(()=>console.log('second instance import OK'))`], second);
+  await run('node', [join(second, 'node_modules', pkg.name, 'dist/src/cli.js')], second);
   console.log(JSON.stringify({ status: 'PACKAGED', repository, revision, tarballSha256: digest, receipts }, null, 2));
 } catch (error) {
   console.error(JSON.stringify({ status: 'BLOCKED', reason: String(error), receipts }, null, 2));
