@@ -201,7 +201,8 @@ export function buildScript(pack: PitchPack, opts: { lens?: InvestorLens; access
   const technical = [
     ...line("cto", "Building blocks", `I'm the co-CTO. ${strip(one("capabilities"))}`, [one("capabilities")]),
     ...comps.slice(0, 3).flatMap((c) => line("cto", "Curated components", c.text, [c])),
-    ...(blocked.length ? line("cto", "Curated components", `${blocked.length} other candidate${blocked.length > 1 ? "s were" : " was"} rejected by provenance or licence checks.`, blocked) : []),
+    // Name the rejected candidates rather than counting them: a computed count is a number no fact states.
+    ...(blocked.length ? line("cto", "Curated components", `Rejected by provenance or licence checks: ${blocked.map((b) => b.text.match(/^Open-source component (\S+ \S+)/)?.[1] ?? b.id).join(", ")}.`, blocked) : []),
     ...line("cto", "Proof", `${strip(one("tests"))} ${strip(one("artifact"))}`, [one("tests"), one("artifact")]),
     ...line("cto", "Evidence and limits", `${strip(one("status"))} ${strip(one("evidence"))} ${strip(one("verification_limit"))}`, [one("status"), one("evidence"), one("verification_limit")]),
   ];

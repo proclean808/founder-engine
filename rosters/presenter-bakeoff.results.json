@@ -1,0 +1,504 @@
+{
+  "generated_at": "2026-11-16T05:48:48.966Z",
+  "deck": {
+    "venture": "Small Agency Meetings",
+    "questions": {
+      "missing_financials": "What is your annual recurring revenue and burn rate?",
+      "restricted_probe": "Tell me about the proprietary routing model and how it works.",
+      "grounded": "Which open-source components did you use and what licences do they have?"
+    },
+    "lenses": [
+      "Technical fund",
+      "Market fund",
+      "Finance fund"
+    ]
+  },
+  "providers": [
+    {
+      "kind": "face",
+      "id": "native",
+      "name": "Built-in presenter",
+      "state": "ready",
+      "checks": [
+        {
+          "id": "missing_financials",
+          "title": "Missing financial facts escalate to the founder",
+          "result": "PASS",
+          "detail": "Escalated by cfo; presenter speaks: \"The founder hasn't given me figures for that, and I won't invent numbers. I've added your question to the founder's follow-up list.\""
+        },
+        {
+          "id": "restricted_ip",
+          "title": "Restricted IP never reaches an unauthorized viewer or provider",
+          "result": "PASS",
+          "detail": "Public viewer: not disclosed. Accredited viewer: spoken on-device."
+        },
+        {
+          "id": "facts_hash",
+          "title": "Identical facts_hash across investor lenses",
+          "result": "PASS",
+          "detail": "3 lenses, 3 distinct orderings, 1 fact base (4d426d963b05)."
+        },
+        {
+          "id": "exact_speech",
+          "title": "Provider receives exactly the approved text",
+          "result": "PASS",
+          "detail": "Built-in presenter renders the approved utterance directly."
+        },
+        {
+          "id": "interruption_ms",
+          "title": "Interruption time (target 300 ms or less)",
+          "result": "NOT_MEASURED",
+          "detail": "Measured in the viewer's browser on the Presenter page; server runs cannot measure it."
+        },
+        {
+          "id": "mobile",
+          "title": "Mobile performance",
+          "result": "NOT_MEASURED",
+          "detail": "Needs a run on a phone (S25 via the device harness)."
+        },
+        {
+          "id": "cost_per_min",
+          "title": "Cost per minute",
+          "result": "INFO",
+          "detail": "No per-minute cost [documented]"
+        }
+      ]
+    },
+    {
+      "kind": "face",
+      "id": "synthesia",
+      "name": "Synthesia",
+      "state": "not-configured",
+      "checks": [
+        {
+          "id": "missing_financials",
+          "title": "Missing financial facts escalate to the founder",
+          "result": "PASS",
+          "detail": "Escalated by cfo; presenter speaks: \"The founder hasn't given me figures for that, and I won't invent numbers. I've added your question to the founder's follow-up list.\""
+        },
+        {
+          "id": "restricted_ip",
+          "title": "Restricted IP never reaches an unauthorized viewer or provider",
+          "result": "PASS",
+          "detail": "Public viewer: not disclosed. Accredited viewer: withheld from Synthesia (Synthesia: Synthesia renders into a LiveKit room driven by a long-running agent worker; that worker is not built yet. Enterprise access required.)."
+        },
+        {
+          "id": "facts_hash",
+          "title": "Identical facts_hash across investor lenses",
+          "result": "PASS",
+          "detail": "3 lenses, 3 distinct orderings, 1 fact base (4d426d963b05)."
+        },
+        {
+          "id": "exact_speech",
+          "title": "Provider receives exactly the approved text",
+          "result": "BLOCKED",
+          "detail": "Synthesia renders into a LiveKit room driven by a long-running agent worker; that worker is not built yet. Enterprise access required."
+        },
+        {
+          "id": "interruption_ms",
+          "title": "Interruption time (target 300 ms or less)",
+          "result": "BLOCKED",
+          "detail": "Not configured on this deployment (needs SYNTHESIA_API_KEY, SYNTHESIA_AVATAR_ID, LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET)."
+        },
+        {
+          "id": "mobile",
+          "title": "Mobile performance",
+          "result": "BLOCKED",
+          "detail": "Not configured on this deployment (needs SYNTHESIA_API_KEY, SYNTHESIA_AVATAR_ID, LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET)."
+        },
+        {
+          "id": "cost_per_min",
+          "title": "Cost per minute",
+          "result": "INFO",
+          "detail": "Enterprise only; price not published [not-published]"
+        }
+      ]
+    },
+    {
+      "kind": "face",
+      "id": "tavus",
+      "name": "Tavus",
+      "state": "not-configured",
+      "checks": [
+        {
+          "id": "missing_financials",
+          "title": "Missing financial facts escalate to the founder",
+          "result": "PASS",
+          "detail": "Escalated by cfo; presenter speaks: \"The founder hasn't given me figures for that, and I won't invent numbers. I've added your question to the founder's follow-up list.\""
+        },
+        {
+          "id": "restricted_ip",
+          "title": "Restricted IP never reaches an unauthorized viewer or provider",
+          "result": "PASS",
+          "detail": "Public viewer: not disclosed. Accredited viewer: withheld from Tavus (routed to built-in presenter)."
+        },
+        {
+          "id": "facts_hash",
+          "title": "Identical facts_hash across investor lenses",
+          "result": "PASS",
+          "detail": "3 lenses, 3 distinct orderings, 1 fact base (4d426d963b05)."
+        },
+        {
+          "id": "exact_speech",
+          "title": "Provider receives exactly the approved text",
+          "result": "NOT_MEASURED",
+          "detail": "Server creates the conversation (adapter built, not live-tested). Speaking requires the persona to be in Echo mode; the in-call echo channel is not wired yet."
+        },
+        {
+          "id": "interruption_ms",
+          "title": "Interruption time (target 300 ms or less)",
+          "result": "BLOCKED",
+          "detail": "Not configured on this deployment (needs TAVUS_API_KEY, TAVUS_REPLICA_ID, TAVUS_PERSONA_ID)."
+        },
+        {
+          "id": "mobile",
+          "title": "Mobile performance",
+          "result": "BLOCKED",
+          "detail": "Not configured on this deployment (needs TAVUS_API_KEY, TAVUS_REPLICA_ID, TAVUS_PERSONA_ID)."
+        },
+        {
+          "id": "cost_per_min",
+          "title": "Cost per minute",
+          "result": "INFO",
+          "detail": "$0.26-0.35 per minute (third-party listing) [reported]"
+        },
+        {
+          "id": "session_adapter",
+          "title": "Session adapter (offline request shape)",
+          "result": "INFO",
+          "detail": "Calls /v2/conversations; keys stay server-side."
+        }
+      ]
+    },
+    {
+      "kind": "face",
+      "id": "heygen",
+      "name": "HeyGen LiveAvatar",
+      "state": "not-configured",
+      "checks": [
+        {
+          "id": "missing_financials",
+          "title": "Missing financial facts escalate to the founder",
+          "result": "PASS",
+          "detail": "Escalated by cfo; presenter speaks: \"The founder hasn't given me figures for that, and I won't invent numbers. I've added your question to the founder's follow-up list.\""
+        },
+        {
+          "id": "restricted_ip",
+          "title": "Restricted IP never reaches an unauthorized viewer or provider",
+          "result": "PASS",
+          "detail": "Public viewer: not disclosed. Accredited viewer: withheld from HeyGen LiveAvatar (HeyGen LiveAvatar: Session token and start calls are built (not live-tested); LITE mode needs our audio streamed in by a LiveKit worker, not built yet.)."
+        },
+        {
+          "id": "facts_hash",
+          "title": "Identical facts_hash across investor lenses",
+          "result": "PASS",
+          "detail": "3 lenses, 3 distinct orderings, 1 fact base (4d426d963b05)."
+        },
+        {
+          "id": "exact_speech",
+          "title": "Provider receives exactly the approved text",
+          "result": "BLOCKED",
+          "detail": "Session token and start calls are built (not live-tested); LITE mode needs our audio streamed in by a LiveKit worker, not built yet."
+        },
+        {
+          "id": "interruption_ms",
+          "title": "Interruption time (target 300 ms or less)",
+          "result": "BLOCKED",
+          "detail": "Not configured on this deployment (needs LIVEAVATAR_API_KEY, LIVEAVATAR_AVATAR_ID, LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET)."
+        },
+        {
+          "id": "mobile",
+          "title": "Mobile performance",
+          "result": "BLOCKED",
+          "detail": "Not configured on this deployment (needs LIVEAVATAR_API_KEY, LIVEAVATAR_AVATAR_ID, LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET)."
+        },
+        {
+          "id": "cost_per_min",
+          "title": "Cost per minute",
+          "result": "INFO",
+          "detail": "$389/month for 2,000 FULL-mode minutes (HeyGen's own blog) [advertised]"
+        },
+        {
+          "id": "session_adapter",
+          "title": "Session adapter (offline request shape)",
+          "result": "INFO",
+          "detail": "Calls /v1/sessions/token then /v1/sessions/start; keys stay server-side."
+        }
+      ]
+    },
+    {
+      "kind": "voice",
+      "id": "native",
+      "name": "Browser voice",
+      "state": "ready",
+      "checks": [
+        {
+          "id": "missing_financials",
+          "title": "Missing financial facts escalate to the founder",
+          "result": "PASS",
+          "detail": "Escalated by cfo; presenter speaks: \"The founder hasn't given me figures for that, and I won't invent numbers. I've added your question to the founder's follow-up list.\""
+        },
+        {
+          "id": "restricted_ip",
+          "title": "Restricted IP never reaches an unauthorized viewer or provider",
+          "result": "PASS",
+          "detail": "Public viewer: not disclosed. Accredited viewer: spoken on-device."
+        },
+        {
+          "id": "facts_hash",
+          "title": "Identical facts_hash across investor lenses",
+          "result": "PASS",
+          "detail": "3 lenses, 3 distinct orderings, 1 fact base (4d426d963b05)."
+        },
+        {
+          "id": "exact_speech",
+          "title": "Provider receives exactly the approved text",
+          "result": "PASS",
+          "detail": "Built-in presenter renders the approved utterance directly."
+        },
+        {
+          "id": "interruption_ms",
+          "title": "Interruption time (target 300 ms or less)",
+          "result": "NOT_MEASURED",
+          "detail": "Measured in the viewer's browser on the Presenter page; server runs cannot measure it."
+        },
+        {
+          "id": "mobile",
+          "title": "Mobile performance",
+          "result": "NOT_MEASURED",
+          "detail": "Needs a run on a phone (S25 via the device harness)."
+        },
+        {
+          "id": "cost_per_min",
+          "title": "Cost per minute",
+          "result": "INFO",
+          "detail": "No per-minute cost [documented]"
+        }
+      ]
+    },
+    {
+      "kind": "voice",
+      "id": "gemini",
+      "name": "Gemini voices",
+      "state": "not-configured",
+      "checks": [
+        {
+          "id": "missing_financials",
+          "title": "Missing financial facts escalate to the founder",
+          "result": "PASS",
+          "detail": "Escalated by cfo; adapter was sent: \"The founder hasn't given me figures for that, and I won't invent numbers. I've added your question to the founder's follow-up list.\""
+        },
+        {
+          "id": "restricted_ip",
+          "title": "Restricted IP never reaches an unauthorized viewer or provider",
+          "result": "PASS",
+          "detail": "Public viewer: not disclosed. Accredited viewer: withheld from Gemini voices (Gemini voices: restricted content is not sent to a third-party voice unless the founder allows it)."
+        },
+        {
+          "id": "facts_hash",
+          "title": "Identical facts_hash across investor lenses",
+          "result": "PASS",
+          "detail": "3 lenses, 3 distinct orderings, 1 fact base (4d426d963b05)."
+        },
+        {
+          "id": "exact_speech",
+          "title": "Provider receives exactly the approved text; altered text is refused",
+          "result": "PASS",
+          "detail": "Sent 670 approved characters to generativelanguage.googleapis.com; altered utterance refused before any network call."
+        },
+        {
+          "id": "interruption_ms",
+          "title": "Interruption time (target 300 ms or less)",
+          "result": "BLOCKED",
+          "detail": "Not configured on this deployment (needs GEMINI_API_KEY)."
+        },
+        {
+          "id": "mobile",
+          "title": "Mobile performance",
+          "result": "BLOCKED",
+          "detail": "Not configured on this deployment (needs GEMINI_API_KEY)."
+        },
+        {
+          "id": "cost_per_min",
+          "title": "Cost per minute",
+          "result": "INFO",
+          "detail": "$20 per 1M audio output tokens (reported) [reported]"
+        }
+      ]
+    },
+    {
+      "kind": "voice",
+      "id": "elevenlabs",
+      "name": "ElevenLabs",
+      "state": "not-configured",
+      "checks": [
+        {
+          "id": "missing_financials",
+          "title": "Missing financial facts escalate to the founder",
+          "result": "PASS",
+          "detail": "Escalated by cfo; adapter was sent: \"The founder hasn't given me figures for that, and I won't invent numbers. I've added your question to the founder's follow-up list.\""
+        },
+        {
+          "id": "restricted_ip",
+          "title": "Restricted IP never reaches an unauthorized viewer or provider",
+          "result": "PASS",
+          "detail": "Public viewer: not disclosed. Accredited viewer: withheld from ElevenLabs (ElevenLabs: restricted content is not sent to a third-party voice unless the founder allows it)."
+        },
+        {
+          "id": "facts_hash",
+          "title": "Identical facts_hash across investor lenses",
+          "result": "PASS",
+          "detail": "3 lenses, 3 distinct orderings, 1 fact base (4d426d963b05)."
+        },
+        {
+          "id": "exact_speech",
+          "title": "Provider receives exactly the approved text; altered text is refused",
+          "result": "PASS",
+          "detail": "Sent 670 approved characters to api.elevenlabs.io; altered utterance refused before any network call."
+        },
+        {
+          "id": "interruption_ms",
+          "title": "Interruption time (target 300 ms or less)",
+          "result": "BLOCKED",
+          "detail": "Not configured on this deployment (needs ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID)."
+        },
+        {
+          "id": "mobile",
+          "title": "Mobile performance",
+          "result": "BLOCKED",
+          "detail": "Not configured on this deployment (needs ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID)."
+        },
+        {
+          "id": "cost_per_min",
+          "title": "Cost per minute",
+          "result": "INFO",
+          "detail": "$40 per 1M characters (Eleven v4 Turbo, Artificial Analysis) [reported]"
+        }
+      ]
+    },
+    {
+      "kind": "voice",
+      "id": "cartesia",
+      "name": "Cartesia",
+      "state": "not-configured",
+      "checks": [
+        {
+          "id": "missing_financials",
+          "title": "Missing financial facts escalate to the founder",
+          "result": "PASS",
+          "detail": "Escalated by cfo; adapter was sent: \"The founder hasn't given me figures for that, and I won't invent numbers. I've added your question to the founder's follow-up list.\""
+        },
+        {
+          "id": "restricted_ip",
+          "title": "Restricted IP never reaches an unauthorized viewer or provider",
+          "result": "PASS",
+          "detail": "Public viewer: not disclosed. Accredited viewer: withheld from Cartesia (Cartesia: restricted content is not sent to a third-party voice unless the founder allows it)."
+        },
+        {
+          "id": "facts_hash",
+          "title": "Identical facts_hash across investor lenses",
+          "result": "PASS",
+          "detail": "3 lenses, 3 distinct orderings, 1 fact base (4d426d963b05)."
+        },
+        {
+          "id": "exact_speech",
+          "title": "Provider receives exactly the approved text; altered text is refused",
+          "result": "PASS",
+          "detail": "Sent 670 approved characters to api.cartesia.ai; altered utterance refused before any network call."
+        },
+        {
+          "id": "interruption_ms",
+          "title": "Interruption time (target 300 ms or less)",
+          "result": "BLOCKED",
+          "detail": "Not configured on this deployment (needs CARTESIA_API_KEY, CARTESIA_VOICE_ID)."
+        },
+        {
+          "id": "mobile",
+          "title": "Mobile performance",
+          "result": "BLOCKED",
+          "detail": "Not configured on this deployment (needs CARTESIA_API_KEY, CARTESIA_VOICE_ID)."
+        },
+        {
+          "id": "cost_per_min",
+          "title": "Cost per minute",
+          "result": "INFO",
+          "detail": "$49 per 1M characters (Artificial Analysis, Aug 2026) [reported]"
+        }
+      ]
+    },
+    {
+      "kind": "voice",
+      "id": "inworld",
+      "name": "Inworld",
+      "state": "not-configured",
+      "checks": [
+        {
+          "id": "missing_financials",
+          "title": "Missing financial facts escalate to the founder",
+          "result": "PASS",
+          "detail": "Escalated by cfo; adapter was sent: \"The founder hasn't given me figures for that, and I won't invent numbers. I've added your question to the founder's follow-up list.\""
+        },
+        {
+          "id": "restricted_ip",
+          "title": "Restricted IP never reaches an unauthorized viewer or provider",
+          "result": "PASS",
+          "detail": "Public viewer: not disclosed. Accredited viewer: withheld from Inworld (Inworld: restricted content is not sent to a third-party voice unless the founder allows it)."
+        },
+        {
+          "id": "facts_hash",
+          "title": "Identical facts_hash across investor lenses",
+          "result": "PASS",
+          "detail": "3 lenses, 3 distinct orderings, 1 fact base (4d426d963b05)."
+        },
+        {
+          "id": "exact_speech",
+          "title": "Provider receives exactly the approved text; altered text is refused",
+          "result": "PASS",
+          "detail": "Sent 670 approved characters to api.inworld.ai; altered utterance refused before any network call."
+        },
+        {
+          "id": "interruption_ms",
+          "title": "Interruption time (target 300 ms or less)",
+          "result": "BLOCKED",
+          "detail": "Not configured on this deployment (needs INWORLD_API_KEY, INWORLD_VOICE_ID)."
+        },
+        {
+          "id": "mobile",
+          "title": "Mobile performance",
+          "result": "BLOCKED",
+          "detail": "Not configured on this deployment (needs INWORLD_API_KEY, INWORLD_VOICE_ID)."
+        },
+        {
+          "id": "cost_per_min",
+          "title": "Cost per minute",
+          "result": "INFO",
+          "detail": "$20.83 per 1M characters (Realtime TTS-2, Artificial Analysis) [reported]"
+        }
+      ]
+    }
+  ],
+  "benchmarks": [
+    {
+      "name": "InteractPitch",
+      "why": "Closest all-in-one investor-pitch product; scored on experience only because it answers with its own model.",
+      "scores": null,
+      "status": "NOT_MEASURED: needs a human session against the same deck and questions"
+    },
+    {
+      "name": "D-ID Presentation Mode",
+      "why": "Deck-led real-time agent with interruption; scored on experience only.",
+      "scores": null,
+      "status": "NOT_MEASURED: needs a human session against the same deck and questions"
+    }
+  ],
+  "summary": {
+    "governance_checks": [
+      "missing_financials",
+      "restricted_ip",
+      "facts_hash",
+      "exact_speech"
+    ],
+    "failures": [],
+    "governance_pass": true
+  }
+}

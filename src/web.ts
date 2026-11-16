@@ -20,7 +20,7 @@ export class HttpError extends Error {
   }
 }
 
-function str(v: unknown, field: string, min: number, max: number, optional = false): string | undefined {
+export function str(v: unknown, field: string, min: number, max: number, optional = false): string | undefined {
   if (v === undefined || v === null || v === "") {
     if (optional) return undefined;
     throw new HttpError(400, `${field} is required`);
@@ -102,7 +102,7 @@ export async function handleVetRepos(body: unknown) {
   return { runner: detectRunner(), results, receipts: log.all(), chain_intact: log.verifyChain().length === 0 };
 }
 
-function packFrom(b: Record<string, unknown>) {
+export function packFrom(b: Record<string, unknown>) {
   if (JSON.stringify(b.pack ?? null).length > 400_000) throw new HttpError(413, "pack too large");
   try {
     return normalizePack(b.pack);
@@ -111,12 +111,12 @@ function packFrom(b: Record<string, unknown>) {
   }
 }
 
-function accessFrom(b: Record<string, unknown>) {
+export function accessFrom(b: Record<string, unknown>) {
   const claims = verifyAccess(typeof b.access_token === "string" ? b.access_token : null, process.env.FE_ACCESS_SECRET);
   return { level: claims?.level ?? ("public" as const), viewer: claims ? { sub: claims.sub, level: claims.level, verified_by: claims.verified_by ?? null, expires: new Date(claims.exp * 1000).toISOString() } : null, token_supplied: typeof b.access_token === "string" && b.access_token.length > 0 };
 }
 
-function lensFrom(b: Record<string, unknown>): InvestorLens | undefined {
+export function lensFrom(b: Record<string, unknown>): InvestorLens | undefined {
   const l = (b.lens ?? null) as Record<string, unknown> | null;
   if (!l) return undefined;
   const focus = (Array.isArray(l.focus) ? l.focus : []).filter((f): f is Focus => ["technical", "market", "financial"].includes(String(f)));

@@ -9,13 +9,14 @@ PlatFormula.One founder-to-capital engine, branded **LiveVibe VentureLab.Studio*
 | 1. Curation → vetted OSS stack → working MVP | `src/pipeline.ts`, `discovery`, `provenance`, `license`, `compat`, `repo-vetting`, `build-project` | `/` | Live; Verified by CI |
 | 2. Pitch Studio: founder twin, co-CTO, co-CFO; investor lens; restricted-IP gate | `src/pitch.ts`, `src/access.ts`, `public/pitch.html` | `/pitch.html` | Live |
 | 3. Venture Studio: accounts, venture record, deal flow, lessons memory | `src/studio.ts`, `src/v1.ts`, `src/auth.ts`, `src/db.ts`, `sql/*.sql`, `public/studio.html` | `/studio.html` | Built + tested; **production DB not connected yet** (`/api/v1/*` → 503) |
+| Presenter Studio: three presenters, one speaker at a time, interruption, selectable model/voice/face, bake-off | `src/presenter.ts`, `src/bakeoff.ts`, `src/presenter-web.ts`, `web/` | `/presenter/` | Built + tested offline; vendor voices/faces need keys |
 | Exploratory UI shells | `public/experience-lab.html` | `/experience-lab.html` | Live |
 
 ## Stack
 
 - TypeScript on Node ≥ 20, compiled with `tsc` to `dist/`.
 - Vercel serverless functions in `api/*.js`, thin wrappers over `src/web.ts` and `src/v1.ts`.
-- Plain HTML/CSS/JS in `public/`. No React, Tailwind or Supabase SDK.
+- Plain HTML/CSS/JS in `public/` for the original pages. The Presenter Studio (`web/`, served at `/presenter/`) is React 19 + Vite 8, approved by the founder 2026-11-15; react, react-dom, scheduler, vite and @vitejs/plugin-react were vetted with `scripts/vet-npm.mjs` (see `rosters/presenter-frontend.results.json`) and are exact-pinned devDependencies bundled at build. No Tailwind or Supabase SDK yet.
 - PostgreSQL through `pg`. Any Postgres works (Vercel Marketplace / Neon, or Supabase used purely as a Postgres host). `DATABASE_URL` or `POSTGRES_URL`.
 - Runtime dependencies: only `chrono-node` and `pg`, both exact pins.
 
@@ -29,6 +30,8 @@ npm run pipeline                           # Stage 1 end-to-end against live npm
 node dist/src/cli.js vet-repos <roster.txt>  # vet non-npm components (licence at pinned commit)
 node dist/src/cli.js migrate               # apply sql/ migrations (needs DATABASE_URL)
 node scripts/smoke-production.mjs          # production smoke (6 checks)
+node dist/src/cli.js bakeoff               # presenter bake-off (governance checks for every face/voice)
+npm run build:web                          # build the Presenter Studio into public/presenter/
 ```
 
 Local Postgres for the studio suite: create a database owned by a role with `CREATEROLE`; tests use a throwaway schema per run.
