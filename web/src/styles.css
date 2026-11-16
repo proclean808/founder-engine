@@ -103,3 +103,9 @@ button:disabled { opacity: 0.35; cursor: default; }
 .voice-only .fact { max-width: 640px; text-align: left; }
 .end { margin-top: 26px; }
 @media (prefers-reduced-motion: reduce) { .talk-ring, .talk { animation: none !important; } }
+
+.seat-row { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.seat-row span { color: var(--mute); flex: 1; }
+.seat-row em { font-style: normal; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
+.seat-row .ok { color: #9fd3a4; } .seat-row .no { color: var(--bad); }
+.scene-title { font-family: var(--serif); font-weight: 500; font-size: clamp(24px, 6vw, 36px); margin: 22px 0 0; }

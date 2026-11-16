@@ -22,7 +22,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "npm run build && node --test dist/test/unit.test.js dist/test/build-project.test.js dist/test/presenter.test.js dist/test/studio.test.js",
+    "test": "npm run build && node --test dist/test/unit.test.js dist/test/build-project.test.js dist/test/presenter.test.js dist/test/live.test.js dist/test/studio.test.js",
     "pipeline": "node dist/src/cli.js run --input fixtures/founder-idea.txt",
     "extract": "node dist/src/cli.js extract",
     "workspace": "node dist/src/cli.js workspace",
