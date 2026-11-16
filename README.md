@@ -41,6 +41,24 @@ On the hosted backend the runner is `service`, so results top out at **Tested**.
 
 Curation candidates pass vetting when the tarball hash matches, the recorded source commit is confirmed upstream (by a release tag, or by fetching the license at that commit) and the license text matches upstream. Integrated dependencies are held to the stricter rule: the release tag must equal the registry `gitHead`.
 
+## Pitch Studio (Milestone 2)
+
+`/pitch.html` with `POST /api/pitch` and `POST /api/ask` (`src/pitch.ts`, `src/access.ts`):
+
+- **Evidence pack → facts.** A curate run plus founder statements become numbered, sourced facts. Founder assumptions are always labelled as assumptions.
+- **Three synthetic presenters:** founder digital twin, co-CTO and co-CFO, all with the same fact base.
+- **Every script line cites facts.** A number may appear only if a cited fact contains it.
+- **Q&A.** Each question is routed to the right presenter and answered from the evidence. Optional LLM answers are validated: citations must be real and numbers grounded, otherwise the answer falls back to the evidence text. Uncovered questions escalate to the founder's follow-up list.
+- **Investor lens** (`lens: {investor, focus, basis}`) re-orders emphasis per investor. `facts_hash` is identical across lenses, which proves the facts didn't change.
+- **Accreditation gate.** Founder lines starting `[restricted]` reach only viewers with a signed, expiring `accredited` token:
+  ```bash
+  FE_ACCESS_SECRET=<32+ chars> node dist/src/cli.js issue-access --investor "Jane <jane@acme.vc>" --level accredited --days 7 --verified-by "<provider> ref <id>"
+  ```
+  The engine does not verify accreditation; a regulated third party does. With no secret set on the deployment, restricted facts are never served.
+- **Voice and avatars.** Browser speech synthesis and recognition, with interruption on typing or speaking. Avatars are abstract and labelled synthetic. A likeness or voice clone of the founder needs recorded consent and isn't built.
+
+See `docs/milestone-2/LANDSCAPE.md` for the market and open-source landscape and the vetted roster, and `docs/atoms/milestone-2-pitch-studio.md` for the Atoms build description.
+
 ## Repository vetting (non-npm components)
 
 ```bash

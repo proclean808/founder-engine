@@ -66,9 +66,17 @@ details summary{cursor:pointer;color:var(--mute)}
   <label>One-liner (your words)</label><input id="oneliner" placeholder="e.g. NoteFlow turns meeting notes into owned, dated tasks.">
   <label>The ask</label><input id="ask" placeholder="e.g. Raising $150k pre-seed for 12 months">
   <div class="grid">
-    <div><label>Business / financial assumptions, one per line (presented as assumptions, never as results)</label><textarea id="assumptions" placeholder="Price: $12 per team per month&#10;Target 400 paying teams by month 12"></textarea></div>
+    <div><label>Business / financial assumptions, one per line (presented as assumptions, never as results)</label><textarea id="assumptions" placeholder="Price: $12 per team per month&#10;Target 400 paying teams by month 12&#10;[restricted] proprietary detail only accredited investors see"></textarea></div>
     <div><label>Traction, one per line (marked as founder-stated)</label><textarea id="traction" placeholder="optional"></textarea></div>
   </div>
+  <h2 style="margin-top:16px">3 · Investor (optional)</h2>
+  <p class="small mute" style="margin-top:0">Tunes the order and emphasis for this investor. It never changes the facts: the evidence hash is shown so you can prove it.</p>
+  <div class="grid">
+    <div><label>Investor</label><input id="investor" placeholder="e.g. Jane Doe, Acme Ventures"></div>
+    <div><label>Lead with</label><select id="focus"><option value="">default order</option><option value="technical">technical depth (co-CTO first)</option><option value="market">market and customer first</option><option value="financial">business model first (co-CFO first)</option><option value="technical,financial">technical, then financial</option><option value="market,financial">market, then financial</option></select></div>
+  </div>
+  <label>Basis for that focus (public sources: portfolio, thesis)</label><input id="basis" placeholder="e.g. 6 of 9 public portfolio companies are developer tools">
+  <label>Investor access token (issued after third-party identity/accreditation check; unlocks [restricted] lines)</label><input id="token" placeholder="optional">
   <div class="row"><button id="build" disabled>Build pitch</button><span id="setupState" class="small mute"></span></div>
 </section>
 
@@ -137,6 +145,8 @@ $("runExample").onclick = async () => {
   try { const r = await post("/api/curate", { intent: EXAMPLE }); try { sessionStorage.setItem("fe-run", JSON.stringify(r)); } catch {} setRun(r); $("vname").value ||= "NoteFlow"; $("setupState").textContent = ""; }
   catch (e) { $("setupState").innerHTML = `<span class="err">${esc(e.message)}</span>`; }
 };
+const lens = () => ($("focus").value ? { investor: $("investor").value || undefined, focus: $("focus").value.split(","), basis: $("basis").value || undefined } : undefined);
+const token = () => $("token").value.trim() || undefined;
 const founder = () => ({ founder_name: $("fname").value, venture_name: $("vname").value, one_liner: $("oneliner").value, ask: $("ask").value, assumptions: $("assumptions").value, traction: $("traction").value });
 
 function avatar(p) {
@@ -200,13 +210,13 @@ async function present() {
 $("build").onclick = async () => {
   $("setupState").textContent = "Building…";
   try {
-    deck = await post("/api/pitch", { pack: { run, founder: founder() } });
+    deck = await post("/api/pitch", { pack: { run, founder: founder() }, lens: lens(), access_token: token() });
     $("ptitle").textContent = `${deck.title}: interactive pitch`;
     $("stage").innerHTML = ["founder", "cto", "cfo"].map((p) => `<div class="pres" data-p="${p}" style="--c:${COLORS[p]}">${avatar(p)}<div class="name">${esc(deck.personas[p].title)}</div><div class="tag">Synthetic presenter · AI</div></div>`).join("");
-    $("facts").innerHTML = deck.facts.map((f) => `<div class="fact" style="--c:${COLORS[f.persona]}"><b>${esc(f.id)}</b> <span class="mute small">[${esc(f.persona)} · ${esc(f.source)}]</span><br>${esc(f.text)}</div>`).join("");
+    $("facts").innerHTML = deck.facts.map((f) => `<div class="fact" style="--c:${COLORS[f.persona]}"><b>${esc(f.id)}</b>${f.restricted ? " 🔒" : ""} <span class="mute small">[${esc(f.persona)} · ${esc(f.source)}]</span><br>${esc(f.text)}</div>`).join("");
     $("nf").textContent = deck.facts.length;
     ["studio", "qaBox", "factsBox"].forEach((id) => ($(id).hidden = false));
-    $("setupState").textContent = `${deck.script.length} lines · answers: ${deck.llm}`;
+    $("setupState").innerHTML = `${deck.script.length} lines · access <b>${esc(deck.access)}</b>${deck.viewer ? ` (${esc(deck.viewer.sub)}, verified by ${esc(deck.viewer.verified_by ?? "?")})` : ""} · evidence hash <code>${esc(deck.facts_hash.slice(0, 16))}</code> · answers: ${esc(deck.llm)}${deck.access_note ? `<br><span class="mute">${esc(deck.access_note)}</span>` : ""}`;
     idx = 0; show(0); talking(null);
     $("studio").scrollIntoView({ behavior: "smooth" });
   } catch (e) { $("setupState").innerHTML = `<span class="err">${esc(e.message)}</span>`; }
@@ -222,7 +232,7 @@ async function ask(question) {
   box.className = "qa"; box.innerHTML = `<b>You:</b> ${esc(question)}<br><span class="mute small">…</span>`;
   $("answers").prepend(box);
   try {
-    const a = await post("/api/ask", { pack: { run, founder: founder() }, question, persona: $("who").value || undefined });
+    const a = await post("/api/ask", { pack: { run, founder: founder() }, question, persona: $("who").value || undefined, access_token: token() });
     box.style.setProperty("--c", COLORS[a.persona]);
     box.innerHTML = `<b>You:</b> ${esc(question)}<br><b style="color:${COLORS[a.persona]}">${esc(deck.personas[a.persona].title)}:</b> ${esc(a.answer.replace(/\s*\[F\d+\]/g, ""))}<br>${chips(a.cites)} <span class="mute small">${esc(a.mode)}${a.note ? " · " + esc(a.note) : ""}</span>`;
     qaLog.push({ at: new Date().toISOString(), question, ...a });

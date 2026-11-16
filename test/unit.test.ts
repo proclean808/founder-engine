@@ -289,3 +289,57 @@ test("pitch: untrusted packs are validated", async () => {
   assert.deepEqual(p.founder.assumptions, ["a", "b"]);
   assert.equal(p.founder.founder_name!.length, 80);
 });
+
+test("investor lens: different investors get different emphasis, byte-identical facts", async () => {
+  const { buildScript } = await import("../src/pitch.js");
+  const pack = { run: sampleRun(), founder: { assumptions: ["Price: $12 per team per month"] } };
+  const infra = buildScript(pack, { lens: { investor: "Infra fund", focus: ["technical"] } });
+  const angel = buildScript(pack, { lens: { investor: "Marketplace angel", focus: ["financial", "market"] } });
+  const none = buildScript(pack);
+  assert.equal(infra.facts_hash, angel.facts_hash);
+  assert.equal(infra.facts_hash, none.facts_hash);
+  const firstNonFounder = (s: { persona: string }[]) => s.find((l) => l.persona !== "founder")!.persona;
+  assert.equal(firstNonFounder(infra.script), "cto");
+  assert.equal(firstNonFounder(angel.script), "cfo");
+  const texts = (s: { text: string }[]) => s.map((l) => l.text).filter((t) => !/we've ordered this/.test(t)).sort();
+  assert.deepEqual(texts(infra.script), texts(angel.script), "same statements, different order");
+});
+
+test("access gate: restricted founder facts only for verified accredited tokens; fails closed", async () => {
+  const { buildFacts, answerQuestion } = await import("../src/pitch.js");
+  const { issueAccess, verifyAccess } = await import("../src/access.js");
+  const pack = { run: sampleRun(), founder: { assumptions: ["Price: $12 per team per month", "[restricted] Proprietary routing model cuts parse errors by 40%"] } };
+  assert.ok(!buildFacts(pack).some((f) => /routing model/.test(f.text)));
+  assert.ok(buildFacts(pack, "accredited").some((f) => f.restricted && /routing model/.test(f.text)));
+  const secret = "s".repeat(40);
+  const tok = issueAccess({ sub: "Jane <jane@acme.vc>", level: "accredited", verified_by: "provider ref 123", days: 7 }, secret);
+  assert.equal(verifyAccess(tok, secret)?.level, "accredited");
+  assert.equal(verifyAccess(tok, undefined), null, "no secret configured -> public");
+  assert.equal(verifyAccess(tok, "x".repeat(40)), null, "wrong secret");
+  assert.equal(verifyAccess(tok.replace(/.$/, (c) => (c === "A" ? "B" : "A")), secret), null, "tampered signature");
+  assert.equal(verifyAccess(tok, secret, Date.now() + 8 * 86400_000), null, "expired");
+  assert.throws(() => issueAccess({ sub: "x", level: "accredited", days: 1 }, "short"), /32 characters/);
+  const pub = await answerQuestion(pack, "Tell me about the proprietary routing model", null, undefined, "public");
+  assert.ok(!/40%/.test(pub.answer));
+  const acc = await answerQuestion(pack, "Tell me about the proprietary routing model", null, undefined, "accredited");
+  assert.match(acc.answer, /40%/);
+});
+
+test("web: pitch endpoint applies lens + access and reports gating status", async () => {
+  const { handlePitch } = await import("../src/web.js");
+  const { issueAccess } = await import("../src/access.js");
+  const pack = { run: sampleRun(), founder: { assumptions: ["[restricted] Secret sauce detail"] } };
+  delete process.env.FE_ACCESS_SECRET;
+  const p0 = handlePitch({ pack, lens: { focus: ["technical"], investor: "X" } });
+  assert.equal(p0.access, "public");
+  assert.match(String(p0.access_note), /not configured/);
+  process.env.FE_ACCESS_SECRET = "k".repeat(40);
+  const tok = issueAccess({ sub: "Jane", level: "accredited", verified_by: "ref", days: 1 }, process.env.FE_ACCESS_SECRET);
+  const p1 = handlePitch({ pack, access_token: tok });
+  assert.equal(p1.access, "accredited");
+  assert.ok(p1.facts.some((f: { restricted?: boolean }) => f.restricted));
+  const p2 = handlePitch({ pack, access_token: "garbage.token" });
+  assert.equal(p2.access, "public");
+  assert.match(String(p2.access_note), /invalid or expired/);
+  delete process.env.FE_ACCESS_SECRET;
+});

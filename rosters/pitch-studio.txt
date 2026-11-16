@@ -1,0 +1,29 @@
+# Milestone 2/3 roster: interactive investor pitch with avatar presenters + venture studio
+# Candidates from market research; every claim unverified until vetted.
+# --- deck generation / rendering
+presenton/presenton
+allweonedev/presentation-ai
+h9-tec/Open_Gamma
+hakimel/reveal.js
+slidevjs/slidev
+marp-team/marp-core
+# --- avatar presenters / lip-sync
+met4citizen/TalkingHead
+interviewflowai/talking-avatar
+pixiv/three-vrm
+KwaiVGI/LivePortrait
+TMElyralab/MuseTalk
+# --- conversational voice (turn-taking, interruption)
+pipecat-ai/pipecat
+livekit/agents
+# --- speech in/out (self-hostable)
+hexgrad/kokoro
+ggml-org/whisper.cpp
+k2-fsa/sherpa-onnx
+# --- investor identity, gating, data room
+ballerine-io/ballerine
+mfts/papermark
+# --- investor research (public SEC data)
+dgunning/edgartools
+# --- multi-agent venture studio core (Atoms is built on this)
+FoundationAgents/MetaGPT

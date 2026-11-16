@@ -7,6 +7,7 @@
 // Rules: every scripted line cites a fact; answers cite facts; no number may appear in an answer
 // unless it appears in the cited facts; when the evidence is silent the presenter escalates to the
 // human founder instead of guessing. Presenters are synthetic and labelled as such.
+import { createHash } from "node:crypto";
 import type { ChatProvider } from "./provider.js";
 import type { RegistryEntry, VentureSpec } from "./types.js";
 
@@ -36,7 +37,10 @@ export interface Fact {
   kind: string;
   text: string;
   source: string; // where the fact came from (spec, registry, receipt hash, founder input)
+  restricted?: boolean; // founder-marked IP: served only to viewers with verified accredited access
 }
+
+export type AccessLevel = "public" | "identified" | "accredited";
 
 export interface FounderInputs {
   founder_name?: string;
@@ -90,10 +94,25 @@ export function normalizePack(raw: unknown): PitchPack {
   };
 }
 
-export function buildFacts(pack: PitchPack): Fact[] {
+const RESTRICTED = /^\s*(\[restricted\]|!)\s*/i;
+
+/**
+ * Build the fact base. Founder lines prefixed with "[restricted]" (or "!") are IP: they only reach
+ * viewers whose access level is "accredited". Ids are assigned over the FULL fact set so they are
+ * stable across access levels; restricted facts are then removed, never paraphrased.
+ */
+export function buildFacts(pack: PitchPack, access: AccessLevel = "public"): Fact[] {
+  const all = buildAllFacts(pack);
+  return access === "accredited" ? all : all.filter((f) => !f.restricted);
+}
+
+function buildAllFacts(pack: PitchPack): Fact[] {
   const { run, founder } = pack;
   const facts: Fact[] = [];
-  const add = (persona: Persona, kind: string, text: string, source: string) => facts.push({ id: `F${facts.length + 1}`, persona, kind, text, source });
+  const add = (persona: Persona, kind: string, text: string, source: string) => {
+    const restricted = RESTRICTED.test(text) || /: \s*(\[restricted\]|!)/i.test(text);
+    facts.push({ id: `F${facts.length + 1}`, persona, kind, text: text.replace(/(\[restricted\]|^!|: !)\s*/gi, (m) => (m.startsWith(":") ? ": " : "")), source, ...(restricted ? { restricted: true } : {}) });
+  };
   const s = run.spec;
 
   // Founder twin: the founder's own words and the structured spec derived from them
@@ -141,42 +160,72 @@ export interface ScriptLine {
   cites: string[];
 }
 
-export function buildScript(pack: PitchPack): { facts: Fact[]; script: ScriptLine[]; title: string } {
-  const facts = buildFacts(pack);
+export type Focus = "technical" | "market" | "financial";
+
+/** Investor lens: changes EMPHASIS and ORDER only. The fact base is identical for every lens. */
+export interface InvestorLens {
+  investor?: string; // display name, e.g. "Jane Doe, Acme Ventures"
+  focus: Focus[]; // most important first, e.g. ["technical", "market"]
+  basis?: string; // where the focus came from, e.g. "public portfolio: 6 of 9 deals are dev tools"
+}
+
+export function factsHash(facts: Fact[]): string {
+  const canon = JSON.stringify(facts.map((f) => [f.id, f.persona, f.kind, f.text, f.source]));
+  return createHash("sha256").update(canon).digest("hex");
+}
+
+export function buildScript(pack: PitchPack, opts: { lens?: InvestorLens; access?: AccessLevel } = {}): { facts: Fact[]; facts_hash: string; script: ScriptLine[]; title: string; lens: InvestorLens | null; access: AccessLevel } {
+  const access = opts.access ?? "public";
+  const facts = buildFacts(pack, access);
   const by = (kind: string) => facts.filter((f) => f.kind === kind);
   const one = (kind: string) => by(kind)[0];
   const venture = pack.founder.venture_name ?? pack.run.spec.venture_name;
   const who = pack.founder.founder_name ? `${pack.founder.founder_name}'s digital twin` : "the founder's digital twin";
-  const script: ScriptLine[] = [];
-  const say = (persona: Persona, section: string, text: string, fs: (Fact | undefined)[]) => {
-    const cites = fs.filter(Boolean).map((f) => f!.id);
-    if (cites.length) script.push({ persona, section, text, cites });
-  };
   const strip = (f?: Fact) => f?.text ?? "";
+  const line = (persona: Persona, section: string, text: string, fs: (Fact | undefined)[]): ScriptLine[] => {
+    const cites = fs.filter(Boolean).map((f) => f!.id);
+    return cites.length && text.trim() ? [{ persona, section, text: text.trim(), cites }] : [];
+  };
 
-  say("founder", "Opening", `I'm ${who}, a synthetic presenter for ${venture}. ${strip(one("one_liner"))}`.trim(), [one("one_liner") ?? one("problem")]);
-  say("founder", "Problem", strip(one("problem")), [one("problem")]);
-  say("founder", "Customer", `${strip(one("customer"))} ${strip(one("stage"))} ${strip(one("constraints"))}`.trim(), [one("customer"), one("stage"), one("constraints")]);
-  for (const t of by("traction")) say("founder", "Traction", t.text, [t]);
-  say("cto", "Building blocks", `Thanks. I'm the co-CTO. ${strip(one("capabilities"))}`, [one("capabilities")]);
+  const opening = [
+    ...line("founder", "Opening", `I'm ${who}, a synthetic presenter for ${venture}. ${strip(one("one_liner"))}`, [one("one_liner") ?? one("problem")]),
+    ...line("founder", "Problem", strip(one("problem")), [one("problem")]),
+  ];
+  const market = [
+    ...line("founder", "Customer", `${strip(one("customer"))} ${strip(one("stage"))} ${strip(one("constraints"))}`, [one("customer"), one("stage"), one("constraints")]),
+    ...by("traction").flatMap((t) => line("founder", "Traction", t.text, [t])),
+  ];
   const rank = (f: Fact) => (/status (Verified|Tested)/.test(f.text) ? 0 : /status (Integrated|Proposed)/.test(f.text) ? 1 : 2);
   const comps = [...by("component")].sort((a, b) => rank(a) - rank(b));
-  for (const c of comps.slice(0, 3)) say("cto", "Curated components", c.text, [c]);
-  const blocked = comps.filter((c) => rank(c) === 2).length;
-  if (blocked) say("cto", "Curated components", `${blocked} other candidate${blocked > 1 ? "s were" : " was"} rejected by provenance or licence checks.`, comps.filter((c) => rank(c) === 2));
-  say("cto", "Proof", `${strip(one("tests"))} ${strip(one("artifact"))}`.trim(), [one("tests"), one("artifact")]);
-  say("cto", "Evidence and limits", `${strip(one("status"))} ${strip(one("evidence"))} ${strip(one("verification_limit"))}`.trim(), [one("status"), one("evidence"), one("verification_limit")]);
-  if (by("assumption").length) {
-    say("cfo", "Business model", `I'm the co-CFO. Everything I present is the founder's stated assumption, not a measured result.`, [by("assumption")[0]]);
-    for (const a of by("assumption")) say("cfo", "Assumptions", a.text, [a]);
-  } else {
-    say("cfo", "Business model", `I'm the co-CFO. ${strip(one("no_assumptions"))}`, [one("no_assumptions")]);
-  }
-  say("cfo", "Costs", strip(one("licence_cost")), [one("licence_cost")]);
-  say("founder", "The ask", strip(one("ask")) || "", [one("ask")]);
-  say("founder", "Open questions", strip(one("open_questions")), [one("open_questions")]);
-  say("founder", "Close", `Ask any of us a question. If the evidence doesn't cover it, we'll route it to the founder instead of guessing.`, [one("problem")]);
-  return { facts, script, title: venture };
+  const blocked = comps.filter((c) => rank(c) === 2);
+  const technical = [
+    ...line("cto", "Building blocks", `I'm the co-CTO. ${strip(one("capabilities"))}`, [one("capabilities")]),
+    ...comps.slice(0, 3).flatMap((c) => line("cto", "Curated components", c.text, [c])),
+    ...(blocked.length ? line("cto", "Curated components", `${blocked.length} other candidate${blocked.length > 1 ? "s were" : " was"} rejected by provenance or licence checks.`, blocked) : []),
+    ...line("cto", "Proof", `${strip(one("tests"))} ${strip(one("artifact"))}`, [one("tests"), one("artifact")]),
+    ...line("cto", "Evidence and limits", `${strip(one("status"))} ${strip(one("evidence"))} ${strip(one("verification_limit"))}`, [one("status"), one("evidence"), one("verification_limit")]),
+  ];
+  const financial = by("assumption").length
+    ? [
+        ...line("cfo", "Business model", "I'm the co-CFO. Everything I present is the founder's stated assumption, not a measured result.", [by("assumption")[0]]),
+        ...by("assumption").flatMap((a) => line("cfo", "Assumptions", a.text, [a])),
+        ...line("cfo", "Costs", strip(one("licence_cost")), [one("licence_cost")]),
+      ]
+    : [...line("cfo", "Business model", `I'm the co-CFO. ${strip(one("no_assumptions"))}`, [one("no_assumptions")]), ...line("cfo", "Costs", strip(one("licence_cost")), [one("licence_cost")])];
+  const closing = [
+    ...line("founder", "The ask", strip(one("ask")), [one("ask")]),
+    ...line("founder", "Open questions", strip(one("open_questions")), [one("open_questions")]),
+    ...line("founder", "Close", "Ask any of us a question. If the evidence doesn't cover it, we'll route it to the founder instead of guessing.", [one("problem")]),
+  ];
+
+  const blocks: Record<Focus, ScriptLine[]> = { market, technical, financial };
+  const lens = opts.lens && opts.lens.focus?.length ? opts.lens : null;
+  const order: Focus[] = lens ? [...new Set([...lens.focus.filter((f) => f in blocks), "market", "technical", "financial"] as Focus[])] : ["market", "technical", "financial"];
+  const lensIntro = lens
+    ? line("founder", "Opening", `${lens.investor ? `${lens.investor}, ` : ""}we've ordered this around what you focus on: ${order.slice(0, lens.focus.length).join(" and ")} first. The underlying facts are identical for every investor at your access level.`, [one("problem")])
+    : [];
+  const script = [...opening.slice(0, 1), ...lensIntro, ...opening.slice(1), ...order.flatMap((k) => blocks[k]), ...closing];
+  return { facts, facts_hash: factsHash(facts), script, title: venture, lens, access };
 }
 
 // ---------- Q&A ----------
@@ -249,8 +298,8 @@ function escalation(persona: Persona, q: string): Answer {
   return { persona, answer: `${why} I've added it to the founder's follow-up list: "${clean(q, 160)}"`, cites: [], escalate: true, mode: "evidence-retrieval" };
 }
 
-export async function answerQuestion(pack: PitchPack, question: string, provider: ChatProvider | null, persona?: Persona): Promise<Answer> {
-  const facts = buildFacts(pack);
+export async function answerQuestion(pack: PitchPack, question: string, provider: ChatProvider | null, persona?: Persona, access: AccessLevel = "public"): Promise<Answer> {
+  const facts = buildFacts(pack, access);
   const who = persona ?? routeQuestion(question);
   const hits = retrieve(facts, question, who);
   if (!hits.length) return escalation(who, question);

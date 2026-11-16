@@ -16,6 +16,7 @@ import { providerFromEnv } from "./provider.js";
 import { EvidenceLog, detectRunner } from "./evidence.js";
 import { buildProject } from "./build-project.js";
 import { vetRepo } from "./repo-vetting.js";
+import { issueAccess } from "./access.js";
 import { writeFileSync } from "node:fs";
 
 const [, , cmd, ...rest] = process.argv;
@@ -97,8 +98,18 @@ async function main(): Promise<number> {
       console.log(`\n${results.filter((r) => r.status === "Proposed").length}/${list.length} vetted · chain ${log.verifyChain().length ? "BROKEN" : "intact"}`);
       return 0;
     }
+    case "issue-access": {
+      // issue-access --investor "Jane Doe <jane@acme.vc>" --level accredited --days 7 --verified-by "Provider ref 123"
+      const secret = process.env.FE_ACCESS_SECRET ?? "";
+      const investor = flag("investor");
+      const level = (flag("level") ?? "identified") as "identified" | "accredited";
+      if (!investor) { console.error("usage: issue-access --investor <name/email> --level identified|accredited --days N --verified-by <provider ref>"); return 2; }
+      if (level === "accredited" && !flag("verified-by")) { console.error("accredited access requires --verified-by <third-party verification reference>"); return 2; }
+      console.log(issueAccess({ sub: investor, level, verified_by: flag("verified-by"), days: Number(flag("days") ?? 7) }, secret));
+      return 0;
+    }
     default:
-      console.log("usage: founder-engine run|intake|extract|ask|verify-evidence|build-project|vet-repos");
+      console.log("usage: founder-engine run|intake|extract|ask|verify-evidence|build-project|vet-repos|issue-access");
       return cmd ? 2 : 0;
   }
 }

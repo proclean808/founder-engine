@@ -8,7 +8,8 @@ import { runPipeline } from "./pipeline.js";
 import { extractActionItems } from "./product/actionItems.js";
 import { EvidenceLog, detectRunner } from "./evidence.js";
 import { vetRepo } from "./repo-vetting.js";
-import { normalizePack, buildScript, answerQuestion, PERSONAS, type Persona } from "./pitch.js";
+import { normalizePack, buildScript, answerQuestion, PERSONAS, type Persona, type InvestorLens, type Focus } from "./pitch.js";
+import { verifyAccess } from "./access.js";
 import { providerFromEnv } from "./provider.js";
 
 export const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -110,11 +111,32 @@ function packFrom(b: Record<string, unknown>) {
   }
 }
 
+function accessFrom(b: Record<string, unknown>) {
+  const claims = verifyAccess(typeof b.access_token === "string" ? b.access_token : null, process.env.FE_ACCESS_SECRET);
+  return { level: claims?.level ?? ("public" as const), viewer: claims ? { sub: claims.sub, level: claims.level, verified_by: claims.verified_by ?? null, expires: new Date(claims.exp * 1000).toISOString() } : null, token_supplied: typeof b.access_token === "string" && b.access_token.length > 0 };
+}
+
+function lensFrom(b: Record<string, unknown>): InvestorLens | undefined {
+  const l = (b.lens ?? null) as Record<string, unknown> | null;
+  if (!l) return undefined;
+  const focus = (Array.isArray(l.focus) ? l.focus : []).filter((f): f is Focus => ["technical", "market", "financial"].includes(String(f)));
+  if (!focus.length) return undefined;
+  return { focus, investor: str(l.investor, "lens.investor", 1, 120, true), basis: str(l.basis, "lens.basis", 1, 300, true) };
+}
+
 export function handlePitch(body: unknown) {
   const b = (body ?? {}) as Record<string, unknown>;
   const pack = packFrom(b);
-  const { facts, script, title } = buildScript(pack);
-  return { title, personas: PERSONAS, facts, script, founder: pack.founder, llm: providerFromEnv() ? "configured" : "not configured (evidence-retrieval answers)" };
+  const acc = accessFrom(b);
+  const out = buildScript(pack, { lens: lensFrom(b), access: acc.level });
+  return {
+    ...out,
+    personas: PERSONAS,
+    founder: pack.founder,
+    viewer: acc.viewer,
+    access_note: acc.token_supplied && !acc.viewer ? "access token invalid or expired: showing public facts only" : process.env.FE_ACCESS_SECRET ? null : "access gating not configured on this deployment: restricted facts are never served",
+    llm: providerFromEnv() ? "configured" : "not configured (evidence-retrieval answers)",
+  };
 }
 
 export async function handleAsk(body: unknown) {
@@ -123,5 +145,5 @@ export async function handleAsk(body: unknown) {
   const question = str(b.question, "question", 3, 500)!;
   const persona = b.persona === undefined || b.persona === null || b.persona === "" ? undefined : String(b.persona);
   if (persona && !(persona in PERSONAS)) throw new HttpError(400, "persona must be founder, cto or cfo");
-  return answerQuestion(pack, question, providerFromEnv(), persona as Persona | undefined);
+  return answerQuestion(pack, question, providerFromEnv(), persona as Persona | undefined, accessFrom(b).level);
 }
