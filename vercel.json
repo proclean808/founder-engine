@@ -15,5 +15,17 @@
       "source": "/api/v1/:path*",
       "destination": "/api/v1?path=:path*"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/presenter",
+      "destination": "/app/#/pitch",
+      "permanent": false
+    },
+    {
+      "source": "/presenter/",
+      "destination": "/app/#/pitch",
+      "permanent": false
+    }
   ]
 }

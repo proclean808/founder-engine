@@ -2,14 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DRIVERS, Mic, sheriff } from "./live.js";
 
 // ------------------------------------------------------------------ engine API
-async function api(body) {
-  const r = await fetch("/api/presenter", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+export async function api(body, path = "/api/presenter") {
+  const r = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
   return j;
 }
 
-const ROLE = {
+export const ROLE = {
   founder: { short: "Founder", title: "Founder digital twin", mark: "F", hue: "var(--gold)" },
   cto: { short: "Co-CTO", title: "Co-CTO", mark: "T", hue: "var(--cyan)" },
   cfo: { short: "Co-CFO", title: "Co-CFO", mark: "$", hue: "var(--rose)" },
@@ -31,7 +31,7 @@ function Presenter({ role, active, speaking }) {
 const PROVIDER_NAME = { openai: "ChatGPT voice", gemini: "Gemini Live", grok: "Grok Voice" };
 const NEXT_UP = "You have the floor. Present your talking points now, in your own words, then call hand_off.";
 
-export default function App() {
+export default function LiveRoom({ embedded = false }) {
   const [status, setStatus] = useState(null);
   const [pack, setPack] = useState(null);
   const [error, setError] = useState(null);
@@ -154,12 +154,13 @@ export default function App() {
   const label = phase === "idle" ? "Begin" : phase === "connecting" ? "Connecting" : phase === "ended" ? "Begin again" : listening ? "Listening" : "Live · just speak";
 
   return (
-    <div className="shell">
-      <header className="top">
+    <div className={embedded ? "shell embedded" : "shell"}>
+      {!embedded && (      <header className="top">
         <div className="brand"><b>LiveVibe</b> VentureLab<span>{pack?.founder?.venture_name ?? pack?.run?.spec?.venture_name ?? "Live pitch"}</span></div>
         <button className="ghost" onClick={() => setShowSettings((s) => !s)} aria-expanded={showSettings}>Room</button>
-      </header>
+      </header>)}
 
+      {embedded && <button className="ghost room-toggle" onClick={() => setShowSettings((x) => !x)}>Room settings</button>}
       {showSettings && (
         <section className="settings">
           {seatsList.map((s) => (

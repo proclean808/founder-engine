@@ -131,7 +131,7 @@ type Fetch = (url: string, init: { method: string; headers: Record<string, strin
 export class LiveError extends Error {}
 
 /** Mint a single-session credential for one presenter. The browser connects to the vendor directly with it. */
-export async function mintSession(provider: LiveProviderId, brief: ReturnType<typeof presenterBrief>, voice: string | undefined, env: NodeJS.ProcessEnv = process.env, f: Fetch = fetch as unknown as Fetch) {
+export async function mintSession(provider: LiveProviderId, brief: { instructions: string; tools: typeof LIVE_TOOLS | { name: string; description: string; parameters: unknown }[] }, voice: string | undefined, env: NodeJS.ProcessEnv = process.env, f: Fetch = fetch as unknown as Fetch) {
   const p = LIVE_PROVIDERS[provider];
   if (!p) throw new LiveError(`unknown live provider ${provider}`);
   const key = env[p.key];

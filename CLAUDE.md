@@ -9,7 +9,8 @@ PlatFormula.One founder-to-capital engine, branded **LiveVibe VentureLab.Studio*
 | 1. Curation → vetted OSS stack → working MVP | `src/pipeline.ts`, `discovery`, `provenance`, `license`, `compat`, `repo-vetting`, `build-project` | `/` | Live; Verified by CI |
 | 2. Pitch Studio: founder twin, co-CTO, co-CFO; investor lens; restricted-IP gate | `src/pitch.ts`, `src/access.ts`, `public/pitch.html` | `/pitch.html` | Live |
 | 3. Venture Studio: accounts, venture record, deal flow, lessons memory | `src/studio.ts`, `src/v1.ts`, `src/auth.ts`, `src/db.ts`, `sql/*.sql`, `public/studio.html` | `/studio.html` | Built + tested; **production DB not connected yet** (`/api/v1/*` → 503) |
-| Presenter Studio: three presenters, one speaker at a time, interruption, selectable model/voice/face, bake-off | `src/presenter.ts`, `src/bakeoff.ts`, `src/presenter-web.ts`, `web/` | `/presenter/` | Built + tested offline; vendor voices/faces need keys |
+| Founder Engine dashboard: voice Concierge, ventures, OpenSlice, Build, Evidence, Settings | `src/concierge.ts`, `src/workspace-web.ts`, `web/src/Dashboard.jsx` | `/app/` | Built + tested offline; voice needs a model key |
+| Pitch Studio live room: native speech-to-speech presenters (Grok, Gemini Live, OpenAI Realtime), engine tools, live Sheriff guard | `src/live.ts`, `src/presenter.ts`, `src/bakeoff.ts`, `web/src/LiveRoom.jsx`, `web/src/live.js` | `/app/#/pitch` (`/presenter/` redirects) | Built + tested offline; needs OPENAI/GEMINI/XAI keys |
 | Exploratory UI shells | `public/experience-lab.html` | `/experience-lab.html` | Live |
 
 ## Stack
@@ -31,7 +32,7 @@ node dist/src/cli.js vet-repos <roster.txt>  # vet non-npm components (licence a
 node dist/src/cli.js migrate               # apply sql/ migrations (needs DATABASE_URL)
 node scripts/smoke-production.mjs          # production smoke (6 checks)
 node dist/src/cli.js bakeoff               # presenter bake-off (governance checks for every face/voice)
-npm run build:web                          # build the Presenter Studio into public/presenter/
+npm run build:web                          # build the dashboard + live room into public/app/
 ```
 
 Local Postgres for the studio suite: create a database owned by a role with `CREATEROLE`; tests use a throwaway schema per run.

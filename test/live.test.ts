@@ -74,3 +74,23 @@ test("tools: evidence is access-filtered, uncovered money questions escalate, ha
   assert.equal((await runTool(base, "public", "hand_off", { to: "cfo", question: "pricing?" })).to, "cfo");
   assert.equal((await runTool(base, "public", "hand_off", { to: "ceo" })).ok, false);
 });
+
+test("workspace: concierge picks a configured native voice model, never one without a key", async () => {
+  const { conciergeProvider, conciergeStatus, CONCIERGE_TOOLS } = await import("../src/concierge.js");
+  assert.equal(conciergeProvider({}), null);
+  assert.equal(conciergeStatus({}).ready, false);
+  assert.equal(conciergeProvider({ OPENAI_API_KEY: "k" }), "openai");
+  assert.equal(conciergeProvider({ OPENAI_API_KEY: "k", GEMINI_API_KEY: "g" }), "gemini");
+  assert.equal(conciergeProvider({ OPENAI_API_KEY: "k", GEMINI_API_KEY: "g", FE_CONCIERGE_PROVIDER: "openai" }), "openai");
+  assert.equal(conciergeProvider({ GEMINI_API_KEY: "g", FE_CONCIERGE_PROVIDER: "grok" }), "gemini", "requested provider without a key falls back to one that has a key");
+  assert.deepEqual(CONCIERGE_TOOLS.map((t) => t.name), ["define_venture", "find_slices", "get_status", "open_section"]);
+});
+
+test("workspace: a spoken idea becomes a structured venture spec", async () => {
+  const { handleWorkspace } = await import("../src/workspace-web.js");
+  const r = (await handleWorkspace({ action: "define", statement: "I run a small agency and our meetings end with notes nobody turns into dated tasks." })) as { spec: { venture_name: string; capabilities: unknown[]; extraction_method: string } };
+  assert.ok(r.spec.venture_name);
+  assert.equal(r.spec.extraction_method, "deterministic-rules");
+  await assert.rejects(handleWorkspace({ action: "define", statement: "short" }));
+  await assert.rejects(handleWorkspace({ action: "concierge_session" }), /voice model key/);
+});
