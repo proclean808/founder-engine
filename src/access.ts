@@ -28,8 +28,10 @@ export function verifyAccess(token: string | undefined | null, secret: string | 
   if (!token || !secret || secret.length < 32) return null;
   const [payload, sig] = String(token).split(".");
   if (!payload || !sig) return null;
-  const expected = createHmac("sha256", secret).update(payload).digest();
-  const got = Buffer.from(sig, "base64url");
+  // Compare canonical encodings: a signature string that decodes to the same bytes but differs
+  // (e.g. non-zero padding bits in the last base64url character) is rejected.
+  const expected = Buffer.from(b64u(createHmac("sha256", secret).update(payload).digest()));
+  const got = Buffer.from(sig);
   if (got.length !== expected.length || !timingSafeEqual(got, expected)) return null;
   try {
     const c = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as AccessClaims;

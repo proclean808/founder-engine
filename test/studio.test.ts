@@ -8,6 +8,7 @@ import { readFileSync } from "node:fs";
 import pg from "pg";
 import { migrate } from "../src/db.js";
 import { route, type V1Request } from "../src/v1.js";
+import { detectRunner } from "../src/evidence.js";
 
 const URL = process.env.FE_TEST_DATABASE_URL;
 const schema = `fe_t_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
@@ -105,10 +106,16 @@ test("M3P1 acceptance: create -> curate -> pitch -> invite -> Q&A -> stage -> fr
   const bogus = await call("POST", "lessons", { component: "curation", environment: "local", symptom: "npm search returned republished forks first", cause: "x".repeat(10), correction: "rank by canonical repository", evidence_ref: "deadbeefdeadbeef" }, token);
   assert.equal(bogus.status, 422);
   const receipt = runBody.run.receipts.find((r) => r.kind === "acceptance")!.receipt_hash;
-  const lesson = await call("POST", "lessons", { component: "curation", environment: "local", symptom: "date parser candidates included republished forks", cause: "registry search returns copies of the same upstream repository", correction: "collapse candidates by canonical repository URL before vetting", evidence_ref: receipt }, token);
+  const env = detectRunner();
+  const otherEnv = env === "ci" ? "service" : "ci";
+  const foreign = await call("POST", "lessons", { component: "curation", environment: otherEnv, symptom: "date parser republished forks in another environment", cause: "same cause, other env", correction: "not applicable here", evidence_ref: runBody.id }, token);
+  assert.equal(foreign.status, 201);
+  const lesson = await call("POST", "lessons", { component: "curation", environment: env, symptom: "date parser candidates included republished forks", cause: "registry search returns copies of the same upstream repository", correction: "collapse candidates by canonical repository URL before vetting", evidence_ref: receipt }, token);
   assert.equal(lesson.status, 201, JSON.stringify(lesson.body));
   const run2 = await call("POST", `ventures/${vid}/runs`, { intent: "Same venture: date parser candidates for due dates in meeting notes, rerun." }, token);
-  assert.ok((run2.body as { lessons_consulted: { id: string; advisory: boolean }[] }).lessons_consulted.some((l) => l.id === (lesson.body as { id: string }).id && l.advisory));
+  const consulted = (run2.body as { lessons_consulted: { id: string; advisory: boolean }[] }).lessons_consulted;
+  assert.ok(consulted.some((l) => l.id === (lesson.body as { id: string }).id && l.advisory), "same-environment lesson consulted");
+  assert.ok(!consulted.some((l) => l.id === (foreign.body as { id: string }).id), "other-environment lesson not consulted");
 
   // fresh login: logout kills the session; a new login sees everything
   assert.equal((await call("POST", "auth/logout", {}, token)).status, 200);
