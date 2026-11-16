@@ -260,5 +260,6 @@ $("exportBtn").onclick = () => {
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([md], { type: "text/markdown" })); a.download = `qa-report-${run.run_id ?? "run"}.md`; a.click();
 };
 </script>
+<script src="/investor-challenges.js" defer></script>
 </body>
 </html>
