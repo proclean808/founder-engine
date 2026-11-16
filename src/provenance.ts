@@ -64,12 +64,12 @@ export function parseRefAdvertisement(body: string): Map<string, string> {
 }
 
 /** Resolve a release tag via the smart-HTTP endpoint (no git binary, no API token, no API rate limit). */
-async function resolveTagCommitHttp(repoUrl: string, version: string): Promise<{ ref: string; commit: string } | null> {
+async function resolveTagCommitHttp(repoUrl: string, version: string, name?: string): Promise<{ ref: string; commit: string } | null> {
   const res = await fetch(`${repoUrl}.git/info/refs?service=git-upload-pack`, { headers: { "user-agent": "git/2.45.0 founder-engine" } });
   if (res.status === 404 || res.status === 401 || res.status === 403) return null; // repo gone or private: no tag evidence
   if (!res.ok) throw new Error(`ref advertisement HTTP ${res.status}`);
   const refs = parseRefAdvertisement(await res.text());
-  for (const tag of [`v${version}`, version]) {
+  for (const tag of tagCandidates(version, name)) {
     const ref = `refs/tags/${tag}`;
     const commit = refs.get(`${ref}^{}`) ?? refs.get(ref);
     if (commit) return { ref, commit };
@@ -77,14 +77,20 @@ async function resolveTagCommitHttp(repoUrl: string, version: string): Promise<{
   return null;
 }
 
+/** Release tag spellings: v1.2.3, 1.2.3, and monorepo forms pg@1.2.3 / pkg-v1.2.3. */
+export function tagCandidates(version: string, name?: string): string[] {
+  const base = name?.replace(/^@[^/]+\//, "");
+  return [`v${version}`, version, ...(name ? [`${name}@${version}`, `${base}@${version}`, `${base}-v${version}`, `${base}@v${version}`] : [])].filter((t, i, a) => a.indexOf(t) === i);
+}
+
 /** Resolve a tag to its commit, dereferencing annotated tags. HTTPS first; git ls-remote as fallback. */
-export async function resolveTagCommit(repoUrl: string, version: string): Promise<{ ref: string; commit: string } | null> {
+export async function resolveTagCommit(repoUrl: string, version: string, name?: string): Promise<{ ref: string; commit: string } | null> {
   try {
-    return await resolveTagCommitHttp(repoUrl, version);
+    return await resolveTagCommitHttp(repoUrl, version, name);
   } catch {
     /* network-level failure: fall through to git if it exists on this host */
   }
-  for (const tag of [`v${version}`, version]) {
+  for (const tag of tagCandidates(version, name)) {
     let stdout: string;
     try {
       ({ stdout } = await exec("git", ["ls-remote", repoUrl, `refs/tags/${tag}`, `refs/tags/${tag}^{}`], { timeout: 60_000 }));
@@ -108,7 +114,7 @@ export async function verifyProvenance(
   const tarball = await fetchTarball(meta.dist.tarball);
   const computed = sriSha512(tarball);
   const repository = repoUrlOf(meta);
-  const tag = repository ? await resolveTagCommit(repository, version) : null;
+  const tag = repository ? await resolveTagCommit(repository, version, name) : null;
   const gitHead = meta.gitHead ?? null;
   return {
     meta,

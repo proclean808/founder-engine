@@ -47,6 +47,32 @@ jobs:
           name: evidence-node${{ matrix.node }}
           path: state/
 
+  # Milestone 3: venture studio on a real PostgreSQL (RLS isolation, immutability, full acceptance flow).
+  studio-db:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: fe_owner
+          POSTGRES_PASSWORD: fe_owner_ci
+          POSTGRES_DB: fe_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U fe_owner" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: npm ci && npm run build
+      - name: Studio acceptance on PostgreSQL 16
+        env:
+          FE_TEST_DATABASE_URL: postgres://fe_owner:fe_owner_ci@127.0.0.1:5432/fe_test
+        run: |
+          node --test dist/test/studio.test.js 2>&1 | tee studio.log
+          grep -q "^# fail 0" studio.log && ! grep -q "^# skipped [1-9]" studio.log
+
   # Self-reproduction: the engine takes its own repository (from GitHub, at this exact commit)
   # through the same build-project interface used for founder repositories. Instance 1 is built
   # from the package alone, passes the acceptance chain, then rebuilds the engine itself; the

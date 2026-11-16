@@ -41,6 +41,15 @@ On the hosted backend the runner is `service`, so results top out at **Tested**.
 
 Curation candidates pass vetting when the tarball hash matches, the recorded source commit is confirmed upstream (by a release tag, or by fetching the license at that commit) and the license text matches upstream. Integrated dependencies are held to the stricter rule: the release tag must equal the registry `gitHead`.
 
+## Venture Studio (Milestone 3, Phase 1)
+
+`/studio.html` + `/api/v1/*` on PostgreSQL. It covers founder accounts, a durable venture record (runs, pitch versions, receipts), deal flow (investors, explicitly authorized invitations, sessions, Q&A, stage history, follow-ups) and evidence-backed lessons memory. Tenant isolation uses forced row-level security, and evidence is immutable with a hash-chained audit trail. See [docs/milestone-3/PHASE-1.md](docs/milestone-3/PHASE-1.md) for the governance mapping, acceptance test and open items (including securities counsel review).
+
+```bash
+DATABASE_URL=postgres://... node dist/src/cli.js migrate
+FE_TEST_DATABASE_URL=postgres://... npm test     # runs the studio suite against a real database
+```
+
 ## Pitch Studio (Milestone 2)
 
 `/pitch.html` with `POST /api/pitch` and `POST /api/ask` (`src/pitch.ts`, `src/access.ts`):

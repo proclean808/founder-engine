@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Venture Studio — Founder Engine</title>
+<style>
+:root{color-scheme:dark;--bg:#0a0c0f;--card:#13161b;--line:#242930;--fg:#e8eaed;--mute:#8b919a;--acc:#4f9dff;--ok:#1fae5b;--warn:#d98a0b;--bad:#e0443e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1000px;margin:0 auto;padding:20px 16px 70px}h1{font-size:23px;margin:0}a{color:#8fb8ff}
+.sub{color:var(--mute);margin:4px 0 16px}
+section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0}
+h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:0 0 10px;font-weight:600}
+label{display:block;font-size:13px;color:var(--mute);margin:8px 0 3px}
+input,textarea,select{width:100%;background:#08090c;border:1px solid var(--line);border-radius:8px;color:var(--fg);padding:9px;font:inherit}
+textarea{min-height:64px;resize:vertical}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:700px){.grid{grid-template-columns:1fr}}
+button{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:8px 13px;font:600 14px system-ui;cursor:pointer}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--fg)}button:disabled{opacity:.45}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.mute{color:var(--mute)}.small{font-size:12.5px}.err{color:var(--bad)}.okc{color:var(--ok)}
+code{font:12px ui-monospace,monospace;color:#c6d0dc;word-break:break-all}
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}@media(max-width:760px){.board{grid-template-columns:repeat(2,1fr)}}
+.col{border:1px solid var(--line);border-radius:10px;padding:8px;min-height:70px}.col h3{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:0 0 6px}
+.card{background:#0e1115;border:1px solid var(--line);border-radius:8px;padding:8px;margin:6px 0;cursor:pointer}.card.sel{border-color:var(--acc)}
+.pill{display:inline-block;padding:0 8px;border-radius:99px;font-size:12px;font-weight:700;color:#fff;background:#4b525c}
+.Tested,.Verified,.PASS{background:var(--ok)}.Blocked,.FAIL{background:var(--bad)}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{border-bottom:1px solid var(--line);padding:5px;text-align:left;vertical-align:top}th{color:var(--mute);font-weight:500}
+.hide{display:none}
+.notice{font-size:12.5px;color:var(--mute);border:1px dashed var(--line);border-radius:8px;padding:8px 10px}
+</style>
+</head>
+<body>
+<main>
+<h1>Venture Studio</h1>
+<p class="sub">Founder Engine · Milestone 3. One durable record per venture: curation runs, pitch versions, investors, invitations, Q&amp;A, stage history and lessons, all with an immutable audit trail. <a href="/">Curation</a> · <a href="/pitch.html">Pitch Studio</a></p>
+
+<!-- ============ investor view ============ -->
+<div id="investorView" class="hide">
+  <section><h2>Invitation</h2><div id="invHead" class="mute">Opening…</div></section>
+  <section id="invDeck" class="hide"><h2>Presentation</h2><div id="invScript"></div></section>
+  <section id="invQa" class="hide"><h2>Ask the team</h2>
+    <div class="row" style="margin-top:0"><input id="invQ" placeholder="Your question" style="flex:1"><button id="invAsk">Ask</button></div>
+    <div id="invAnswers"></div>
+    <p class="notice">Synthetic presenters answer only from the venture's evidence. Questions they can't answer go to the founder. Nothing here is an offer to sell securities.</p>
+  </section>
+</div>
+
+<!-- ============ founder view ============ -->
+<div id="founderView" class="hide">
+  <section id="authBox">
+    <h2>Founder sign in</h2>
+    <div class="grid"><div><label>Email</label><input id="email" type="email" autocomplete="username"></div><div><label>Password (12+ characters)</label><input id="pw" type="password" autocomplete="current-password"></div></div>
+    <div class="row"><button id="loginBtn">Sign in</button><button class="ghost" id="signupBtn">Create account</button><span id="authState" class="small"></span></div>
+  </section>
+
+  <div id="app" class="hide">
+    <section>
+      <div class="row" style="margin-top:0;justify-content:space-between"><h2 style="margin:0">Ventures</h2><span class="small mute"><span id="me"></span> · <a href="#" id="logout">sign out</a></span></div>
+      <div class="row"><select id="ventureSel" style="flex:1"></select><input id="newVenture" placeholder="New venture name" style="flex:1"><button class="ghost" id="createVenture">Create</button></div>
+    </section>
+
+    <div id="ventureBox" class="hide">
+      <section>
+        <h2>1 · Curation run</h2>
+        <textarea id="intent" placeholder="Describe what the venture needs to build…"></textarea>
+        <div class="row"><button id="runBtn">Run curation</button><span id="runState" class="small mute"></span></div>
+        <div id="runOut" class="small"></div>
+      </section>
+
+      <section>
+        <h2>2 · Pitch version</h2>
+        <div class="grid">
+          <div><label>From run</label><select id="pitchRun"></select></div>
+          <div><label>Venture name in pitch</label><input id="pVname"></div>
+        </div>
+        <label>The ask</label><input id="pAsk" placeholder="e.g. Raising $150k pre-seed">
+        <label>Assumptions, one per line (prefix [restricted] for IP shown only to accredited investors)</label><textarea id="pAssump"></textarea>
+        <div class="row"><button id="pitchBtn">Create pitch version</button><span id="pitchState" class="small mute"></span></div>
+      </section>
+
+      <section>
+        <h2>3 · Deal flow</h2>
+        <div class="board" id="board"></div>
+        <details style="margin-top:10px"><summary class="mute">Add investor</summary>
+          <div class="grid"><div><label>Name</label><input id="iName"></div><div><label>Firm</label><input id="iFirm"></div></div>
+          <div class="grid"><div><label>Email</label><input id="iEmail"></div><div><label>Lead with</label><select id="iFocus"><option value="">default</option><option value="technical">technical</option><option value="market">market</option><option value="financial">financial</option></select></div></div>
+          <label>Basis for that focus (public sources)</label><input id="iBasis">
+          <div class="row"><button class="ghost" id="addInv">Add investor</button><span id="invState" class="small mute"></span></div>
+        </details>
+        <div id="invPanel" class="hide" style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px">
+          <h2 id="invTitle"></h2>
+          <div class="grid">
+            <div>
+              <label>Invite to pitch</label><select id="invPitch"></select>
+              <label>Access level</label><select id="invLevel"><option value="identified">identified (no restricted facts)</option><option value="accredited">accredited (third-party verified)</option></select>
+              <label>Accreditation verification reference (required for accredited)</label><input id="invVerified" placeholder="provider + reference id">
+              <label>Authorization: type the sentence shown below</label><input id="invAuth">
+              <p class="small mute" id="invAuthHint"></p>
+              <div class="row"><button id="inviteBtn">Issue invitation</button></div>
+              <div id="inviteOut" class="small"></div>
+            </div>
+            <div>
+              <label>Record a call: questions asked, one per line</label><textarea id="sessQs"></textarea>
+              <div class="row"><button class="ghost" id="sessBtn">Record session</button></div>
+              <label>Move stage (human decision)</label>
+              <div class="row" style="margin-top:0"><select id="stageTo" style="flex:1"><option>founder_meeting</option><option>interest_recorded</option><option>passed</option></select><input id="stageNote" placeholder="note (required)" style="flex:2"></div>
+              <div class="row"><button class="ghost" id="stageBtn">Move</button><span id="stageState" class="small"></span></div>
+            </div>
+          </div>
+        </div>
+        <p class="notice">The studio records introductions, sessions and stages. It never offers, negotiates, accepts or settles securities. Interest routes to you. Have securities counsel review the operating model.</p>
+      </section>
+
+      <section>
+        <h2>4 · Lessons memory</h2>
+        <p class="small mute" style="margin-top:0">Verified failures and their corrections. Each needs a stored run id or receipt hash as evidence. Lessons inform later runs; they never authorize changes.</p>
+        <div class="grid"><div><label>Component</label><input id="lComp" value="curation"></div><div><label>Environment</label><select id="lEnv"><option>service</option><option>ci</option><option>local</option><option>any</option></select></div></div>
+        <label>Symptom</label><input id="lSym"><label>Cause</label><input id="lCause"><label>Correction</label><input id="lFix"><label>Evidence (run id or receipt hash)</label><input id="lEv">
+        <div class="row"><button class="ghost" id="lessonBtn">Record lesson</button><span id="lessonState" class="small"></span></div>
+        <div id="lessons" class="small"></div>
+      </section>
+
+      <section>
+        <h2>5 · Evidence history</h2>
+        <div id="histSum" class="small"></div>
+        <div class="row"><button class="ghost" id="histDl">Download full history JSON</button></div>
+        <details><summary class="mute small">Audit trail</summary><div id="auditTbl"></div></details>
+      </section>
+    </div>
+  </div>
+</div>
+</main>
+<script>
+const $ = (i) => document.getElementById(i);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+async function api(method, path, body) {
+  const r = await fetch(`/api/v1/${path}`, { method, credentials: "same-origin", headers: body !== undefined ? { "content-type": "application/json" } : {}, body: body !== undefined ? JSON.stringify(body) : undefined });
+  const j = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
+  if (!r.ok) { const e = new Error(j.error || `HTTP ${r.status}`); e.status = r.status; throw e; }
+  return j;
+}
+const say = (id, m, bad) => ($(id).innerHTML = `<span class="${bad ? "err" : "okc"}">${esc(m)}</span>`);
+let V = null, H = null, selInv = null;
+
+// ---------- investor link ----------
+const inviteToken = (location.hash.match(/invite=([\w-]+)/) || [])[1];
+if (inviteToken) {
+  $("investorView").classList.remove("hide");
+  let sess = null;
+  api("POST", "invite/open", { token: inviteToken }).then((d) => {
+    sess = d.session_id;
+    $("invHead").innerHTML = `<b>${esc(d.title)}</b>, pitch v${d.pitch_version}, prepared for ${esc(d.investor.name)}${d.investor.firm ? ", " + esc(d.investor.firm) : ""}<br><span class="small">Access: <b>${esc(d.access)}</b> · evidence hash <code>${esc(d.facts_hash.slice(0, 16))}</code></span>`;
+    $("invScript").innerHTML = d.script.map((l) => `<p><b>${esc({ founder: "Founder (digital twin)", cto: "Co-CTO", cfo: "Co-CFO" }[l.persona])}</b> <span class="mute small">${esc(l.section)}</span><br>${esc(l.text)} <span class="mute small">${esc(l.cites.join(" "))}</span></p>`).join("");
+    $("invDeck").classList.remove("hide"); $("invQa").classList.remove("hide");
+  }).catch((e) => ($("invHead").innerHTML = `<span class="err">${esc(e.message)}</span>`));
+  $("invAsk").onclick = async () => {
+    const q = $("invQ").value.trim(); if (!q) return; $("invQ").value = "";
+    try { const a = await api("POST", "invite/ask", { token: inviteToken, session_id: sess, question: q });
+      $("invAnswers").insertAdjacentHTML("afterbegin", `<p><b>You:</b> ${esc(q)}<br><b>${esc(a.persona)}:</b> ${esc(a.answer.replace(/\s*\[F\d+\]/g, ""))} ${a.escalate ? '<span class="pill">sent to founder</span>' : ""}</p>`);
+    } catch (e) { $("invAnswers").insertAdjacentHTML("afterbegin", `<p class="err">${esc(e.message)}</p>`); }
+  };
+} else {
+  $("founderView").classList.remove("hide");
+  api("GET", "auth/me").then(signedIn).catch((e) => { if (e.status === 503) say("authState", e.message, true); });
+}
+
+// ---------- founder ----------
+async function auth(kind) {
+  try { await api("POST", `auth/${kind}`, { email: $("email").value, password: $("pw").value }); $("pw").value = ""; signedIn(await api("GET", "auth/me")); }
+  catch (e) { say("authState", e.message, true); }
+}
+$("loginBtn").onclick = () => auth("login"); $("signupBtn").onclick = () => auth("signup");
+$("logout").onclick = async (e) => { e.preventDefault(); await api("POST", "auth/logout", {}); location.reload(); };
+
+async function signedIn(me) {
+  $("authBox").classList.add("hide"); $("app").classList.remove("hide"); $("me").textContent = me.email;
+  await loadVentures();
+}
+async function loadVentures(select) {
+  const vs = await api("GET", "ventures");
+  $("ventureSel").innerHTML = vs.length ? vs.map((v) => `<option value="${v.id}">${esc(v.name)}</option>`).join("") : `<option value="">no ventures yet</option>`;
+  if (select) $("ventureSel").value = select;
+  if (vs.length) openVenture($("ventureSel").value);
+}
+$("ventureSel").onchange = () => openVenture($("ventureSel").value);
+$("createVenture").onclick = async () => { try { const v = await api("POST", "ventures", { name: $("newVenture").value }); $("newVenture").value = ""; loadVentures(v.id); } catch (e) { alert(e.message); } };
+
+async function openVenture(id) { V = id; $("ventureBox").classList.remove("hide"); await refresh(); }
+async function refresh() {
+  H = await api("GET", `ventures/${V}/history`);
+  $("pitchRun").innerHTML = H.runs.map((r) => `<option value="${r.id}">${esc(new Date(r.created_at).toLocaleString())} · ${esc(r.status)}</option>`).reverse().join("") || `<option value="">run curation first</option>`;
+  $("invPitch").innerHTML = H.pitches.map((p) => `<option value="${p.id}" data-v="${p.version}">v${p.version} · ${esc(p.facts_hash.slice(0, 10))}</option>`).reverse().join("") || `<option value="">create a pitch first</option>`;
+  const cols = [["researching"], ["invited", "viewed"], ["qa", "followup"], ["founder_meeting", "interest_recorded", "passed"]];
+  const names = ["Researching", "Invited / viewed", "Q&A / follow-up", "Founder-led outcome"];
+  $("board").innerHTML = cols.map((c, i) => `<div class="col"><h3>${names[i]}</h3>${H.investors.filter((x) => c.includes(x.stage)).map((x) => `<div class="card ${selInv === x.id ? "sel" : ""}" data-id="${x.id}"><b>${esc(x.name)}</b><br><span class="small mute">${esc(x.firm ?? "")} · ${esc(x.stage)}</span></div>`).join("")}</div>`).join("");
+  document.querySelectorAll(".card").forEach((el) => (el.onclick = () => selectInvestor(el.dataset.id)));
+  if (selInv) selectInvestor(selInv, true);
+  const fu = H.followups.filter((f) => f.status === "open").length;
+  $("histSum").innerHTML = `${H.runs.length} runs · ${H.pitches.length} pitch versions · ${H.investors.length} investors · ${H.invitations.length} invitations · ${H.sessions.length} sessions · ${H.qa.length} Q&amp;A · ${fu} open follow-ups · ${H.audit.length} audit events · chain <b class="${H.audit_chain.intact ? "okc" : "err"}">${H.audit_chain.intact ? "intact" : "BROKEN at " + H.audit_chain.broken_at.join(",")}</b>`;
+  $("auditTbl").innerHTML = `<table><tr><th>#</th><th>When</th><th>Actor</th><th>Action</th><th>Hash</th></tr>${H.audit.map((a) => `<tr><td>${a.seq}</td><td>${esc(new Date(a.at).toLocaleString())}</td><td>${esc(a.actor.split(":")[0])}</td><td>${esc(a.action)}</td><td><code>${esc(a.hash.slice(0, 12))}</code></td></tr>`).join("")}</table>`;
+  const ls = await api("GET", "lessons");
+  $("lessons").innerHTML = ls.length ? `<table><tr><th>Component</th><th>Env</th><th>Symptom → correction</th><th>Evidence</th></tr>${ls.map((l) => `<tr><td>${esc(l.component)}</td><td>${esc(l.environment)}</td><td>${esc(l.symptom)} → <b>${esc(l.correction)}</b></td><td><code>${esc(l.evidence_ref.slice(0, 12))}</code></td></tr>`).join("")}</table>` : `<span class="mute">No lessons yet.</span>`;
+}
+function selectInvestor(id, quiet) {
+  selInv = id; const x = H.investors.find((i) => i.id === id); if (!x) return;
+  document.querySelectorAll(".card").forEach((el) => el.classList.toggle("sel", el.dataset.id === id));
+  $("invPanel").classList.remove("hide");
+  $("invTitle").textContent = `${x.name}${x.firm ? ", " + x.firm : ""} · ${x.stage}`;
+  const v = $("invPitch").selectedOptions[0]?.dataset.v ?? "1";
+  $("invAuthHint").innerHTML = `Required sentence: <code>I authorize inviting ${esc(x.name)} to pitch v${esc(v)}</code>`;
+  if (!quiet) { $("inviteOut").textContent = ""; $("invAuth").value = ""; }
+}
+$("invPitch").onchange = () => selInv && selectInvestor(selInv, true);
+
+$("runBtn").onclick = async () => {
+  $("runBtn").disabled = true; $("runState").textContent = "running the engine (~2–5 s)…";
+  try { const r = await api("POST", `ventures/${V}/runs`, { intent: $("intent").value });
+    $("runState").textContent = "";
+    $("runOut").innerHTML = `<span class="pill ${esc(r.status)}">${esc(r.status)}</span> ${esc(r.run.status_reason)}<br>${r.run.registry.map((c) => `${esc(c.name)}@${esc(c.version)} <span class="pill ${esc(c.status)}">${esc(c.status)}</span>`).join(" · ")}${r.lessons_consulted.length ? `<br><span class="mute">Lessons consulted (advisory): ${r.lessons_consulted.map((l) => esc(l.correction)).join("; ")}</span>` : ""}`;
+    await refresh();
+  } catch (e) { say("runState", e.message, true); } finally { $("runBtn").disabled = false; }
+};
+$("pitchBtn").onclick = async () => {
+  try { const p = await api("POST", `ventures/${V}/pitches`, { run_id: $("pitchRun").value, founder: { venture_name: $("pVname").value, ask: $("pAsk").value, assumptions: $("pAssump").value } });
+    say("pitchState", `pitch v${p.version} saved: ${p.script.length} lines, evidence hash ${p.facts_hash.slice(0, 12)}`); await refresh();
+  } catch (e) { say("pitchState", e.message, true); }
+};
+$("addInv").onclick = async () => {
+  try { await api("POST", `ventures/${V}/investors`, { name: $("iName").value, firm: $("iFirm").value, email: $("iEmail").value, focus: $("iFocus").value ? [$("iFocus").value] : [], focus_basis: $("iBasis").value });
+    ["iName", "iFirm", "iEmail", "iBasis"].forEach((i) => ($(i).value = "")); say("invState", "added"); await refresh();
+  } catch (e) { say("invState", e.message, true); }
+};
+$("inviteBtn").onclick = async () => {
+  try { const r = await api("POST", `ventures/${V}/invitations`, { investor_id: selInv, pitch_id: $("invPitch").value, access_level: $("invLevel").value, verified_by: $("invVerified").value, authorization: $("invAuth").value });
+    const link = `${location.origin}${r.link_path}`;
+    $("inviteOut").innerHTML = `<span class="okc">Invitation issued (${esc(r.access_level)}, expires ${esc(new Date(r.expires_at).toLocaleDateString())}).</span> Copy now; it is shown once:<br><code>${esc(link)}</code>`;
+    await refresh();
+  } catch (e) { $("inviteOut").innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+};
+$("sessBtn").onclick = async () => {
+  try { const r = await api("POST", `ventures/${V}/sessions`, { investor_id: selInv, pitch_id: $("invPitch").value, questions: $("sessQs").value.split("\n").map((s) => s.trim()).filter(Boolean) });
+    say("stageState", `session recorded: ${r.answers.length} answers, ${r.answers.filter((a) => a.escalate).length} sent to follow-up`); $("sessQs").value = ""; await refresh();
+  } catch (e) { say("stageState", e.message, true); }
+};
+$("stageBtn").onclick = async () => {
+  try { const r = await api("POST", `ventures/${V}/investors/${selInv}/stage`, { to: $("stageTo").value, note: $("stageNote").value }); say("stageState", `${r.from} → ${r.to}`); $("stageNote").value = ""; await refresh(); }
+  catch (e) { say("stageState", e.message, true); }
+};
+$("lessonBtn").onclick = async () => {
+  try { await api("POST", "lessons", { component: $("lComp").value, environment: $("lEnv").value, symptom: $("lSym").value, cause: $("lCause").value, correction: $("lFix").value, evidence_ref: $("lEv").value });
+    ["lSym", "lCause", "lFix", "lEv"].forEach((i) => ($(i).value = "")); say("lessonState", "lesson recorded"); await refresh();
+  } catch (e) { say("lessonState", e.message, true); }
+};
+$("histDl").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(H, null, 2)], { type: "application/json" })); a.download = `venture-history-${V}.json`; a.click(); };
+</script>
+</body>
+</html>

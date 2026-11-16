@@ -17,6 +17,7 @@ import { EvidenceLog, detectRunner } from "./evidence.js";
 import { buildProject } from "./build-project.js";
 import { vetRepo } from "./repo-vetting.js";
 import { issueAccess } from "./access.js";
+import { getDb, migrate, closeDb } from "./db.js";
 import { writeFileSync } from "node:fs";
 
 const [, , cmd, ...rest] = process.argv;
@@ -98,6 +99,12 @@ async function main(): Promise<number> {
       console.log(`\n${results.filter((r) => r.status === "Proposed").length}/${list.length} vetted · chain ${log.verifyChain().length ? "BROKEN" : "intact"}`);
       return 0;
     }
+    case "migrate": {
+      const applied = await migrate(getDb(), (m) => console.log(m));
+      console.log(applied.length ? `applied ${applied.length} migration(s)` : "schema up to date");
+      await closeDb();
+      return 0;
+    }
     case "issue-access": {
       // issue-access --investor "Jane Doe <jane@acme.vc>" --level accredited --days 7 --verified-by "Provider ref 123"
       const secret = process.env.FE_ACCESS_SECRET ?? "";
@@ -109,7 +116,7 @@ async function main(): Promise<number> {
       return 0;
     }
     default:
-      console.log("usage: founder-engine run|intake|extract|ask|verify-evidence|build-project|vet-repos|issue-access");
+      console.log("usage: founder-engine run|intake|extract|ask|verify-evidence|build-project|vet-repos|issue-access|migrate");
       return cmd ? 2 : 0;
   }
 }

@@ -7,7 +7,13 @@
   "functions": {
     "api/*.js": {
       "maxDuration": 60,
-      "includeFiles": "{dist/**,package.json,package-lock.json,fixtures/**,node_modules/chrono-node/package.json}"
+      "includeFiles": "{dist/**,sql/**,package.json,package-lock.json,fixtures/**,node_modules/chrono-node/package.json}"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/v1/:path*",
+      "destination": "/api/v1?path=:path*"
+    }
+  ]
 }
