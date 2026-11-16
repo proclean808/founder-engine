@@ -22,10 +22,11 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "npm run build && node --test dist/test/unit.test.js dist/test/build-project.test.js dist/test/studio.test.js",
+    "test": "npm run build && node --test dist/test/unit.test.js dist/test/build-project.test.js dist/test/presenter.test.js dist/test/live.test.js dist/test/studio.test.js",
     "pipeline": "node dist/src/cli.js run --input fixtures/founder-idea.txt",
     "extract": "node dist/src/cli.js extract",
-    "workspace": "node dist/src/cli.js workspace"
+    "workspace": "node dist/src/cli.js workspace",
+    "build:web": "vite build --config web/vite.config.mjs"
   },
   "dependencies": {
     "chrono-node": "2.10.3",
@@ -34,6 +35,10 @@
   "devDependencies": {
     "@types/node": "22.20.5",
     "@types/pg": "8.23.1",
-    "typescript": "5.9.3"
+    "@vitejs/plugin-react": "6.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "typescript": "5.9.3",
+    "vite": "8.3.8"
   }
 }

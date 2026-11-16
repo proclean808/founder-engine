@@ -19,6 +19,8 @@ import { vetRepo } from "./repo-vetting.js";
 import { issueAccess } from "./access.js";
 import { getDb, migrate, closeDb } from "./db.js";
 import { writeFileSync } from "node:fs";
+import { runBakeoff } from "./bakeoff.js";
+import { PROJECT_ROOT } from "./web.js";
 
 const [, , cmd, ...rest] = process.argv;
 const flag = (name: string) => {
@@ -115,8 +117,19 @@ async function main(): Promise<number> {
       console.log(issueAccess({ sub: investor, level, verified_by: flag("verified-by"), days: Number(flag("days") ?? 7) }, secret));
       return 0;
     }
+    case "bakeoff": {
+      // bakeoff [--out rosters/presenter-bakeoff.results.json]: presenter bake-off with evidence receipts
+      const out = flag("out") ?? "rosters/presenter-bakeoff.results.json";
+      const report = await runBakeoff(PROJECT_ROOT);
+      const log = new EvidenceLog(out.replace(/\.json$/, ".evidence.jsonl"));
+      for (const p of report.providers) for (const c of p.checks) log.record("presenter-bakeoff", `${p.kind}:${p.id}:${c.id}`, c.result === "PASS" ? "PASS" : c.result === "FAIL" ? "FAIL" : "INFO", { provider: p.id, check: c.id }, c);
+      writeFileSync(out, JSON.stringify(report, null, 2) + "\n");
+      for (const p of report.providers) console.log(`${p.kind.padEnd(5)} ${p.id.padEnd(11)} ${p.checks.map((c) => `${c.id}=${c.result}`).join(" ")}`);
+      console.log(report.summary.governance_pass ? "governance checks: PASS for every provider" : `governance FAIL: ${report.summary.failures.join(", ")}`);
+      return report.summary.governance_pass ? 0 : 1;
+    }
     default:
-      console.log("usage: founder-engine run|intake|extract|ask|verify-evidence|build-project|vet-repos|issue-access|migrate");
+      console.log("usage: founder-engine run|intake|extract|ask|verify-evidence|build-project|vet-repos|issue-access|migrate|bakeoff");
       return cmd ? 2 : 0;
   }
 }

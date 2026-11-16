@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "npm ci",
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build && npm run build:web",
   "outputDirectory": "public",
   "functions": {
     "api/*.js": {
@@ -14,6 +14,18 @@
     {
       "source": "/api/v1/:path*",
       "destination": "/api/v1?path=:path*"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/presenter",
+      "destination": "/app/#/pitch",
+      "permanent": false
+    },
+    {
+      "source": "/presenter/",
+      "destination": "/app/#/pitch",
+      "permanent": false
     }
   ]
 }

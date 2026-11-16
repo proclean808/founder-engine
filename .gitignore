@@ -3,3 +3,5 @@ dist/
 state/
 .env
 .env.*
+public/app/
+public/presenter/

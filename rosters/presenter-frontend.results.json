@@ -1,0 +1,160 @@
+{
+  "vetted_at": "2026-11-16T05:20:29.302Z",
+  "results": [
+    {
+      "name": "react",
+      "version": "19.3.1",
+      "pass": true,
+      "status": "strict",
+      "provenance": {
+        "name": "react",
+        "version": "19.3.1",
+        "tarballUrl": "https://registry.npmjs.org/react/-/react-19.3.1.tgz",
+        "integrity": "sha512-QNhWdt7nrgVWWQG58QuGsAR3jv3Hbe4mb4vz7w2csnHavciZJgda1CPNaldF6eVxv90ud3jUXpKlHL69gO38yw==",
+        "tarballSha512Matches": true,
+        "gitHead": "61aa00df822d0eb76d0362eb8b6fdd3527693efe",
+        "repository": "https://github.com/react/react",
+        "tagRef": "refs/tags/v19.3.1",
+        "tagCommit": "61aa00df822d0eb76d0362eb8b6fdd3527693efe",
+        "gitHeadMatchesTag": true
+      },
+      "license": {
+        "spdx": "MIT",
+        "declaredInPackageJson": "MIT",
+        "tarballLicenseFile": "package/LICENSE",
+        "tarballLicenseSha256": "cf9b17822d1fcd4ff32ccbe14183386fb3adf6f2ff92dc184130823f7fc28173",
+        "upstreamLicenseUrl": "https://raw.githubusercontent.com/react/react/61aa00df822d0eb76d0362eb8b6fdd3527693efe/LICENSE",
+        "upstreamLicenseSha256": "cf9b17822d1fcd4ff32ccbe14183386fb3adf6f2ff92dc184130823f7fc28173",
+        "tarballMatchesUpstream": true,
+        "mitClausesPresent": true,
+        "copyrightLine": "Copyright (c) Meta Platforms, Inc. and affiliates.",
+        "compatibleWithProject": true,
+        "problems": []
+      }
+    },
+    {
+      "name": "react-dom",
+      "version": "19.3.1",
+      "pass": true,
+      "status": "strict",
+      "provenance": {
+        "name": "react-dom",
+        "version": "19.3.1",
+        "tarballUrl": "https://registry.npmjs.org/react-dom/-/react-dom-19.3.1.tgz",
+        "integrity": "sha512-Y0bARz53lhEC1NMCASs0/j+faB/zqt3R8hpvg1e8+61ZVJ4UL0UdC4cBbXfZMcIuhrfgeILTLe+ZeBCavQPtKQ==",
+        "tarballSha512Matches": true,
+        "gitHead": "61aa00df822d0eb76d0362eb8b6fdd3527693efe",
+        "repository": "https://github.com/react/react",
+        "tagRef": "refs/tags/v19.3.1",
+        "tagCommit": "61aa00df822d0eb76d0362eb8b6fdd3527693efe",
+        "gitHeadMatchesTag": true
+      },
+      "license": {
+        "spdx": "MIT",
+        "declaredInPackageJson": "MIT",
+        "tarballLicenseFile": "package/LICENSE",
+        "tarballLicenseSha256": "cf9b17822d1fcd4ff32ccbe14183386fb3adf6f2ff92dc184130823f7fc28173",
+        "upstreamLicenseUrl": "https://raw.githubusercontent.com/react/react/61aa00df822d0eb76d0362eb8b6fdd3527693efe/LICENSE",
+        "upstreamLicenseSha256": "cf9b17822d1fcd4ff32ccbe14183386fb3adf6f2ff92dc184130823f7fc28173",
+        "tarballMatchesUpstream": true,
+        "mitClausesPresent": true,
+        "copyrightLine": "Copyright (c) Meta Platforms, Inc. and affiliates.",
+        "compatibleWithProject": true,
+        "problems": []
+      }
+    },
+    {
+      "name": "scheduler",
+      "version": "0.28.0",
+      "pass": true,
+      "status": "partial: package has no release tag; gitHead verified only",
+      "provenance": {
+        "name": "scheduler",
+        "version": "0.28.0",
+        "tarballUrl": "https://registry.npmjs.org/scheduler/-/scheduler-0.28.0.tgz",
+        "integrity": "sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw==",
+        "tarballSha512Matches": true,
+        "gitHead": "1d34f91dfde6bba84d08b683aaba164c7194dacb",
+        "repository": "https://github.com/react/react",
+        "tagRef": null,
+        "tagCommit": null,
+        "gitHeadMatchesTag": false
+      },
+      "license": {
+        "spdx": "MIT",
+        "declaredInPackageJson": "MIT",
+        "tarballLicenseFile": "package/LICENSE",
+        "tarballLicenseSha256": "cf9b17822d1fcd4ff32ccbe14183386fb3adf6f2ff92dc184130823f7fc28173",
+        "upstreamLicenseUrl": "https://raw.githubusercontent.com/react/react/1d34f91dfde6bba84d08b683aaba164c7194dacb/LICENSE",
+        "upstreamLicenseSha256": "cf9b17822d1fcd4ff32ccbe14183386fb3adf6f2ff92dc184130823f7fc28173",
+        "tarballMatchesUpstream": true,
+        "mitClausesPresent": true,
+        "copyrightLine": "Copyright (c) Meta Platforms, Inc. and affiliates.",
+        "compatibleWithProject": true,
+        "problems": []
+      }
+    },
+    {
+      "name": "vite",
+      "version": "8.3.8",
+      "pass": true,
+      "status": "partial: package publishes no gitHead; release tag used",
+      "provenance": {
+        "name": "vite",
+        "version": "8.3.8",
+        "tarballUrl": "https://registry.npmjs.org/vite/-/vite-8.3.8.tgz",
+        "integrity": "sha512-LzOn3h9rG/0vhLdXrV4yJ4QFA9eEoqCl+Yx+kGJd7aB9w6nfNgVHKSYwLPZUHrz4ZGa+t+kXjV9itvcHDLQouA==",
+        "tarballSha512Matches": true,
+        "gitHead": null,
+        "repository": "https://github.com/vitejs/vite",
+        "tagRef": "refs/tags/v8.3.8",
+        "tagCommit": "b39e6e63dcbfc3cf4be871acf3554efbd6d0e268",
+        "gitHeadMatchesTag": false
+      },
+      "license": {
+        "spdx": "MIT",
+        "declaredInPackageJson": "MIT",
+        "tarballLicenseFile": "package/LICENSE.md",
+        "tarballLicenseSha256": "cfc205b5ad8f8c86d740b3e29662e6ab55143cab75b9cf80f10c898ef3a554e5",
+        "upstreamLicenseUrl": "https://raw.githubusercontent.com/vitejs/vite/b39e6e63dcbfc3cf4be871acf3554efbd6d0e268/packages/vite/LICENSE.md",
+        "upstreamLicenseSha256": "cfc205b5ad8f8c86d740b3e29662e6ab55143cab75b9cf80f10c898ef3a554e5",
+        "tarballMatchesUpstream": true,
+        "mitClausesPresent": true,
+        "copyrightLine": "Copyright (c) 2019-present, VoidZero Inc. and Vite contributors",
+        "compatibleWithProject": true,
+        "problems": []
+      }
+    },
+    {
+      "name": "@vitejs/plugin-react",
+      "version": "6.3.0",
+      "pass": true,
+      "status": "strict",
+      "provenance": {
+        "name": "@vitejs/plugin-react",
+        "version": "6.3.0",
+        "tarballUrl": "https://registry.npmjs.org/@vitejs/plugin-react/-/plugin-react-6.3.0.tgz",
+        "integrity": "sha512-H9E955aVvD2F4zNHCw4eIZbIfF6xKldlh7MNu+hSU7xwQzh65lI/N+CJWqmfhi0PEjDXIt/H7T7J/4wU63KJiw==",
+        "tarballSha512Matches": true,
+        "gitHead": "0e95069a8f90489da74371c9ad35dfc619c1b72e",
+        "repository": "https://github.com/vitejs/vite-plugin-react",
+        "tagRef": "refs/tags/plugin-react@6.3.0",
+        "tagCommit": "0e95069a8f90489da74371c9ad35dfc619c1b72e",
+        "gitHeadMatchesTag": true
+      },
+      "license": {
+        "spdx": "MIT",
+        "declaredInPackageJson": "MIT",
+        "tarballLicenseFile": "package/LICENSE",
+        "tarballLicenseSha256": "f77a743a6b87e3bd1435953073f446de1b8d0da0ff24e17d1194e1b749333d27",
+        "upstreamLicenseUrl": "https://raw.githubusercontent.com/vitejs/vite-plugin-react/0e95069a8f90489da74371c9ad35dfc619c1b72e/LICENSE",
+        "upstreamLicenseSha256": "f77a743a6b87e3bd1435953073f446de1b8d0da0ff24e17d1194e1b749333d27",
+        "tarballMatchesUpstream": true,
+        "mitClausesPresent": true,
+        "copyrightLine": "Copyright (c) 2019-present, Yuxi (Evan) You and Vite contributors",
+        "compatibleWithProject": true,
+        "problems": []
+      }
+    }
+  ]
+}
