@@ -142,13 +142,20 @@ test("tenant isolation: another founder sees nothing, even raw queries without t
   assert.equal((await call("GET", `ventures/${v.id}/history`, undefined, b.token)).status, 404);
   assert.deepEqual((await call("GET", "ventures", undefined, b.token)).body, []);
   assert.equal((await call("POST", `ventures/${v.id}/investors`, { name: "x" }, b.token)).status, 404);
-  const raw = await db.query("SELECT count(*)::int AS n FROM fe_ventures");
-  assert.equal(raw.rows[0].n, 0, "FORCE RLS: no tenant context, no rows");
-  // a forged insert into another tenant is rejected by the policy
+  // As the app role with no tenant context: no rows, whatever the connection user's privileges.
   const tx = await db.connect();
   try {
     await tx.query("BEGIN");
-    const bid = (await tx.query("SELECT id FROM fe_users WHERE email = 'b@iso.test'")).rows[0].id;
+    await tx.query("SET LOCAL ROLE fe_app");
+    assert.equal((await tx.query("SELECT count(*)::int AS n FROM fe_ventures")).rows[0].n, 0, "FORCE RLS: no tenant context, no rows");
+    // the app role cannot weaken the database
+    for (const sql of ["ALTER TABLE fe_audit_events DISABLE TRIGGER ALL", "ALTER TABLE fe_ventures NO FORCE ROW LEVEL SECURITY", "DELETE FROM fe_sessions WHERE false"]) {
+      await tx.query("SAVEPOINT y");
+      if (sql.startsWith("DELETE")) await tx.query(sql); // allowed: logout
+      else await assert.rejects(tx.query(sql), /must be owner|permission denied/);
+      await tx.query("ROLLBACK TO SAVEPOINT y");
+    }
+    const bid = (await tx.query("SELECT id FROM fe_users WHERE email = 'b@iso.test'")).rows[0].id; // fe_users readable by app role (auth)
     await tx.query("SELECT set_config('app.user_id', $1, true)", [bid]);
     const aid = (await tx.query("SELECT id FROM fe_users WHERE email = 'a@iso.test'")).rows[0].id;
     await assert.rejects(tx.query("INSERT INTO fe_ventures(owner_id, name) VALUES ($1, 'forged')", [aid]), /row-level security/);
@@ -166,12 +173,18 @@ test("immutability: evidence rows cannot be updated, deleted or truncated; tampe
   try {
     await tx.query("BEGIN");
     await tx.query("SELECT set_config('app.user_id', $1, true)", [s.user_id]);
+    // Even the owner (connection user) is stopped by the immutability triggers...
     for (const sql of ["UPDATE fe_audit_events SET actor = 'mallory'", "DELETE FROM fe_runs", "TRUNCATE fe_audit_events"]) {
       await tx.query("SAVEPOINT x");
       await assert.rejects(tx.query(sql), /immutable evidence/);
       await tx.query("ROLLBACK TO SAVEPOINT x");
     }
-    // The table owner can disable triggers; the hash chain still exposes the edit.
+    // ...and the app role lacks the privilege outright.
+    await tx.query("SAVEPOINT z");
+    await tx.query("SET LOCAL ROLE fe_app");
+    await assert.rejects(tx.query("UPDATE fe_audit_events SET actor = 'mallory'"), /permission denied/);
+    await tx.query("ROLLBACK TO SAVEPOINT z");
+    // The table owner can still disable triggers; the hash chain exposes the edit.
     await tx.query("ALTER TABLE fe_audit_events DISABLE TRIGGER fe_audit_events_no_update");
     await tx.query("UPDATE fe_audit_events SET detail = '{\"name\":\"rewritten\"}' WHERE action = 'venture.create'");
     await tx.query("ALTER TABLE fe_audit_events ENABLE TRIGGER fe_audit_events_no_update");
@@ -180,6 +193,7 @@ test("immutability: evidence rows cannot be updated, deleted or truncated; tampe
     tx.release();
   }
   const h = (await call("GET", `ventures/${v.id}/history`, undefined, s.token)).body as { audit_chain: { intact: boolean; broken_at: number[] } };
+  // only this tenant's chain is visible and only the edited event fails
   assert.equal(h.audit_chain.intact, false);
   assert.equal(h.audit_chain.broken_at.length, 1);
 });
@@ -197,4 +211,22 @@ test("revoked and unknown invitation tokens do not open; unauthenticated founder
   assert.equal((await call("POST", "invite/open", { token: "x".repeat(43) })).status, 401);
   assert.equal((await call("GET", "ventures")).status, 401);
   assert.equal((await route({ method: "POST", path: "ventures", headers: { authorization: `Bearer ${s.token}`, "content-type": "text/plain" }, query: {}, body: "{}" }, { db, deps })).status, 415);
+});
+
+test("fail closed: a role that can bypass RLS is refused before any query runs", { skip }, async () => {
+  const { withTenant } = await import("../src/db.js");
+  const tx = await db.connect();
+  const su = (await tx.query("SELECT rolsuper OR rolcreaterole AS can FROM pg_roles WHERE rolname = current_user")).rows[0].can;
+  tx.release();
+  if (!su) return; // needs a privileged connection user to flip the attribute
+  const admin = await db.connect();
+  try {
+    await admin.query("ALTER ROLE fe_app BYPASSRLS");
+    await assert.rejects(withTenant(db, "00000000-0000-0000-0000-000000000001", async () => 1), /could bypass row-level security/);
+  } catch (e) {
+    if (!/permission denied|must be superuser|must have/i.test(String(e))) throw e; // managed roles may not allow flipping it
+  } finally {
+    await admin.query("ALTER ROLE fe_app NOBYPASSRLS").catch(() => {});
+    admin.release();
+  }
 });

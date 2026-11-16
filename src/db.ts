@@ -32,12 +32,28 @@ export async function closeDb(): Promise<void> {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+export const APP_ROLE = "fe_app";
+
+/**
+ * Drop to the least-privilege app role for this transaction and prove it cannot bypass RLS.
+ * Fails closed: if the effective role is a superuser or has BYPASSRLS, the request is refused.
+ */
+async function enterAppRole(tx: Tx): Promise<void> {
+  await tx.query(`SET LOCAL ROLE ${APP_ROLE}`);
+  const r = await tx.query("SELECT current_user AS u, rolsuper, rolbypassrls FROM pg_roles WHERE rolname = current_user");
+  const row = r.rows[0];
+  if (!row || row.u !== APP_ROLE || row.rolsuper || row.rolbypassrls) {
+    throw new Error("fe: refusing to serve requests: effective database role could bypass row-level security");
+  }
+}
+
 /** Run fn in a transaction scoped to one tenant (RLS). */
 export async function withTenant<T>(db: Db, userId: string, fn: (tx: Tx) => Promise<T>): Promise<T> {
   if (!UUID.test(userId)) throw new Error("invalid tenant id");
   const tx = await db.connect();
   try {
     await tx.query("BEGIN");
+    await enterAppRole(tx);
     await tx.query("SELECT set_config('app.user_id', $1, true)", [userId]);
     const out = await fn(tx);
     await tx.query("COMMIT");
@@ -52,6 +68,14 @@ export async function withTenant<T>(db: Db, userId: string, fn: (tx: Tx) => Prom
 
 /** Run fn in a transaction with no tenant context (auth tables, invitation lookup by token). */
 export async function withTx<T>(db: Db, fn: (tx: Tx) => Promise<T>): Promise<T> {
+  return ownerTx(db, async (tx) => {
+    await enterAppRole(tx);
+    return fn(tx);
+  });
+}
+
+/** Transaction as the connection user (migrations only). */
+async function ownerTx<T>(db: Db, fn: (tx: Tx) => Promise<T>): Promise<T> {
   const tx = await db.connect();
   try {
     await tx.query("BEGIN");
@@ -75,7 +99,7 @@ function sqlDir(): string {
 /** Apply sql/NNN_*.sql files not yet recorded in fe_schema_migrations. Idempotent, serialised. */
 export async function migrate(db: Db, log: (m: string) => void = () => {}): Promise<string[]> {
   const applied: string[] = [];
-  await withTx(db, async (tx) => {
+  await ownerTx(db, async (tx) => {
     await tx.query("SELECT pg_advisory_xact_lock(hashtext('fe_migrations'))");
     await tx.query("CREATE TABLE IF NOT EXISTS fe_schema_migrations (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())");
     const done = new Set((await tx.query("SELECT name FROM fe_schema_migrations")).rows.map((r) => r.name));
