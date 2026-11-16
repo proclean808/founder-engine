@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Venture Experience Lab · Prototype</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui;background:#080b11;color:#f0f4fc}*{box-sizing:border-box}
+body{margin:0}header{padding:20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #273047}
+a{color:#9bc3ff}main{max-width:1150px;margin:auto;padding:20px}
+h1{font-size:clamp(24px,5vw,44px);margin:12px 0}p{color:#b6c2d7;line-height:1.6}
+.layout{display:grid;grid-template-columns:2fr 1fr;gap:16px}@media(max-width:750px){.layout{grid-template-columns:1fr}}
+.stage,.panel{background:#111927;border:1px solid #29394d;border-radius:16px;padding:22px}
+.stage{min-height:400px;position:relative;overflow:hidden;background:radial-gradient(circle at 50% 45%,#243957,#0a101b 70%)}
+.stage:before{content:'';position:absolute;inset:20%;border:1px solid #486083;border-radius:50%;transform:rotateX(65deg);pointer-events:none}
+button{cursor:pointer;color:#eaf3ff;background:#203753;border:1px solid #4c6787;border-radius:10px;padding:12px;font:inherit}
+button:hover,button:focus-visible{outline:2px solid #8fc7ff}button[aria-pressed=true]{background:#326ba5}
+.nodes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:30px}
+.node{min-height:115px;text-align:left;position:relative;background:#13263b}
+.node strong{display:block;font-size:17px}.node span{font-size:12px;color:#bed1e9}
+.fact{border-left:3px solid #77b9fa;padding:12px;background:#162539;margin:12px 0;white-space:pre-wrap}
+small{color:#a6b7d0}.status{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#9bc3ff}
+footer{margin-top:18px;color:#a7b7ce;font-size:12px}
+</style>
+<header><strong>PlatFormula.One · Venture Experience Lab</strong><a href="/pitch.html">Existing Pitch Studio</a></header>
+<main><div class="status">Experimental interaction shell · No investor data loaded</div>
+<h1>Explore the venture. Interrogate the evidence.</h1>
+<p>Not a slide sequence. Select an operating zone, inspect its evidence requirements, and jump to the existing three-presenter Q&amp;A. This prototype makes no financial or product claims.</p>
+<div class="layout"><section class="stage" aria-label="Interactive venture map"><h2>Venture map</h2><div class="nodes" id="nodes"></div></section>
+<aside class="panel" aria-live="polite"><div class="status" id="type">Select a zone</div><h2 id="heading">Evidence-led exploration</h2><p id="description">Each zone has its own evidence gate and next action.</p><div class="fact" id="evidence">No source pack connected. Facts are not invented.</div><button id="question">Open live pitch Q&amp;A</button></aside></div>
+<footer>Prototype only. The canonical grounded script, access restrictions and Q&amp;A remain in /pitch.html. This page does not bypass accreditation or imply verified traction.</footer></main>
+<script>
+const zones=[
+{id:'problem',title:'Problem & customer',subtitle:'Founder twin',description:'Explore the user pain, target customer and founder thesis.',evidence:'Required: founder statements, customer discovery receipts, dated validation evidence.'},
+{id:'product',title:'Product in motion',subtitle:'Co-CTO',description:'Inspect working product behavior and distinguish implemented features from concepts.',evidence:'Required: live deployment, test receipts, commit provenance, known gaps.'},
+{id:'economics',title:'Business engine',subtitle:'Co-CFO',description:'Challenge pricing, cost structure, runway and financing assumptions.',evidence:'Required: founder-authorized financial inputs and model provenance. Never fabricate metrics.'},
+{id:'diligence',title:'Investor diligence',subtitle:'Proof & access',description:'Trace claims to sources and escalate unresolved questions to the founder.',evidence:'Required: claim register, source receipts, access policy and human follow-up.'}
+];
+const $=id=>document.getElementById(id);
+zones.forEach(z=>{const b=document.createElement('button');b.className='node';b.type='button';b.setAttribute('aria-pressed','false');b.innerHTML='<strong></strong><span></span>';b.querySelector('strong').textContent=z.title;b.querySelector('span').textContent=z.subtitle;b.onclick=()=>{document.querySelectorAll('.node').forEach(n=>n.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');$('type').textContent=z.subtitle;$('heading').textContent=z.title;$('description').textContent=z.description;$('evidence').textContent=z.evidence;$('question').onclick=()=>location.assign('/pitch.html#qaBox');};$('nodes').append(b)});
+$('nodes').firstChild.click();$('question').onclick=()=>location.assign('/pitch.html#qaBox');
+</script></html>
